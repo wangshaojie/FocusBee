@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp"
+    android:height="48dp"
+    android:viewportWidth="48"
+    android:viewportHeight="48">
+    <!-- Train - Cartoon Style -->
+    <path
+        android:fillColor="#DC143C"
+        android:pathData="M12,16 L36,16 L36,32 C36,34 34,36 32,36 L16,36 C14,36 12,34 12,32 Z"/>
+    <path
+        android:fillColor="#87CEEB"
+        android:pathData="M16,20 L32,20 L32,26 L16,26 Z"/>
+    <path
+        android:fillColor="#FFD700"
+        android:pathData="M18,34 A3,3 0 1,1 18,40 A3,3 0 1,1 18,34 Z"/>
+    <path
+        android:fillColor="#FFD700"
+        android:pathData="M30,34 A3,3 0 1,1 30,40 A3,3 0 1,1 30,34 Z"/>
+    <path
+        android:fillColor="#8B4513"
+        android:pathData="M10,14 L14,14 L14,18 L10,18 Z"/>
+    <path
+        android:fillColor="#8B4513"
+        android:pathData="M34,14 L38,14 L38,18 L34,18 Z"/>
+    <path
+        android:fillColor="#DC143C"
+        android:pathData="M22,12 L26,12 L26,16 L22,16 Z"/>
+</vector>

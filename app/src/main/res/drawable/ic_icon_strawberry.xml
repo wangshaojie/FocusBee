@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp"
+    android:height="48dp"
+    android:viewportWidth="48"
+    android:viewportHeight="48">
+    <!-- Strawberry - Cartoon Style -->
+    <path
+        android:fillColor="#FF4444"
+        android:pathData="M24,14 C32,14 38,20 38,28 C38,36 32,38 24,38 C16,38 10,36 10,28 C10,20 16,14 24,14 Z"/>
+    <path
+        android:fillColor="#FF6666"
+        android:pathData="M16,26 C18,24 20,26 20,28"/>
+    <path
+        android:fillColor="#FF6666"
+        android:pathData="M28,26 C30,24 32,26 32,28"/>
+    <path
+        android:fillColor="#FF6666"
+        android:pathData="M22,32 C24,30 26,32 26,34"/>
+    <path
+        android:fillColor="#44AA44"
+        android:pathData="M20,10 C22,6 26,6 28,10"/>
+    <path
+        android:fillColor="#FF0000"
+        android:pathData="M20,10 A2,2 0 1,1 20,14 A2,2 0 1,1 20,10 Z"/>
+    <path
+        android:fillColor="#FF0000"
+        android:pathData="M26,10 A2,2 0 1,1 26,14 A2,2 0 1,1 26,10 Z"/>
+    <path
+        android:fillColor="#FF0000"
+        android:pathData="M22,8 A2,2 0 1,1 22,12 A2,2 0 1,1 22,8 Z"/>
+</vector>

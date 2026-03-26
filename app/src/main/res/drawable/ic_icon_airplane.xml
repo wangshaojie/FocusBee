@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp"
+    android:height="48dp"
+    android:viewportWidth="48"
+    android:viewportHeight="48">
+    <!-- Airplane - Cartoon Style -->
+    <path
+        android:fillColor="#87CEEB"
+        android:pathData="M24,8 L32,24 L24,22 L16,24 Z"/>
+    <path
+        android:fillColor="#4682B4"
+        android:pathData="M20,22 L28,22 L28,32 L20,32 Z"/>
+    <path
+        android:fillColor="#4682B4"
+        android:pathData="M22,32 L22,38 L26,38 L26,32 Z"/>
+    <path
+        android:fillColor="#87CEEB"
+        android:pathData="M12,20 L16,24 L16,28 L12,24 Z"/>
+    <path
+        android:fillColor="#87CEEB"
+        android:pathData="M36,20 L32,24 L32,28 L36,24 Z"/>
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M20,24 L22,26"/>
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M26,24 L28,26"/>
+</vector>

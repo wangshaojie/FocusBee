@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp"
+    android:height="48dp"
+    android:viewportWidth="48"
+    android:viewportHeight="48">
+    <!-- Dog - Cartoon Style -->
+    <path
+        android:fillColor="#FF8B3D"
+        android:pathData="M24,8 C32,8 38,14 38,22 C38,30 32,36 24,36 C16,36 10,30 10,22 C10,14 16,8 24,8 Z"/>
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M18,20 C18,18 20,16 22,16 C24,16 26,18 26,20 C26,22 24,24 22,24 C20,24 18,22 18,20 Z"/>
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M22,20 C22,19 23,18 24,18 C25,18 26,19 26,20 C26,21 25,22 24,22 C23,22 22,21 22,20 Z"/>
+    <path
+        android:fillColor="#000000"
+        android:pathData="M20,19 C20,18.5 20.5,18 21,18 C21.5,18 22,18.5 22,19 C22,19.5 21.5,20 21,20 C20.5,20 20,19.5 20,19 Z"/>
+    <path
+        android:fillColor="#000000"
+        android:pathData="M24,19 C24,18.5 24.5,18 25,18 C25.5,18 26,18.5 26,19 C26,19.5 25.5,20 25,20 C24.5,20 24,19.5 24,19 Z"/>
+    <path
+        android:fillColor="#FF6B6B"
+        android:pathData="M22,22 C22,21.5 22.5,21 23,21 C23.5,21 24,21.5 24,22 C24,22.5 23.5,23 23,23 C22.5,23 22,22.5 22,22 Z"/>
+    <path
+        android:fillColor="#FF8B3D"
+        android:pathData="M14,14 L16,10 L20,12 L14,14 Z"/>
+    <path
+        android:fillColor="#FF8B3D"
+        android:pathData="M34,14 L32,10 L28,12 L34,14 Z"/>
+</vector>

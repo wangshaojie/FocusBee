@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp"
+    android:height="48dp"
+    android:viewportWidth="48"
+    android:viewportHeight="48">
+    <!-- Bicycle - Cartoon Style -->
+    <path
+        android:fillColor="#333333"
+        android:pathData="M18,28 A6,6 0 1,1 18,40 A6,6 0 1,1 18,28 Z"/>
+    <path
+        android:fillColor="#333333"
+        android:pathData="M30,28 A6,6 0 1,1 30,40 A6,6 0 1,1 30,28 Z"/>
+    <path
+        android:fillColor="#FF6347"
+        android:pathData="M18,28 L30,28 L28,22 L20,22 Z"/>
+    <path
+        android:fillColor="#FF6347"
+        android:pathData="M18,28 L18,22"/>
+    <path
+        android:fillColor="#FF6347"
+        android:pathData="M30,28 L30,22"/>
+    <path
+        android:fillColor="#FF6347"
+        android:pathData="M16,22 L20,18"/>
+    <path
+        android:fillColor="#FF6347"
+        android:pathData="M28,22 L32,18"/>
+    <path
+        android:fillColor="#FFD700"
+        android:pathData="M16,28 A2,2 0 1,1 16,32 A2,2 0 1,1 16,28 Z"/>
+    <path
+        android:fillColor="#FFD700"
+        android:pathData="M32,28 A2,2 0 1,1 32,32 A2,2 0 1,1 32,28 Z"/>
+</vector>

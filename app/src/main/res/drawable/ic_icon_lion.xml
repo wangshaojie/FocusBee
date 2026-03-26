@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp"
+    android:height="48dp"
+    android:viewportWidth="48"
+    android:viewportHeight="48">
+    <!-- Lion - Cartoon Style -->
+    <path
+        android:fillColor="#FFD700"
+        android:pathData="M24,8 C34,8 40,16 40,24 C40,32 34,40 24,40 C14,40 8,32 8,24 C8,16 14,8 24,8 Z"/>
+    <path
+        android:fillColor="#FFA500"
+        android:pathData="M12,20 C14,14 20,14 24,16"/>
+    <path
+        android:fillColor="#FFA500"
+        android:pathData="M36,20 C34,14 28,14 24,16"/>
+    <path
+        android:fillColor="#FFA500"
+        android:pathData="M16,36 C18,32 22,30 24,32"/>
+    <path
+        android:fillColor="#FFA500"
+        android:pathData="M32,36 C30,32 26,30 24,32"/>
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M18,22 C18,20 20,18 22,18 C24,18 26,20 26,22 C26,24 24,26 22,26 C20,26 18,24 18,22 Z"/>
+    <path
+        android:fillColor="#000000"
+        android:pathData="M20,21 C20,20 21,19 22,19 C23,19 24,20 24,21 C24,22 23,23 22,23 C21,23 20,22 20,21 Z"/>
+    <path
+        android:fillColor="#000000"
+        android:pathData="M22,21 C22,20 23,19 24,19 C25,19 26,20 26,21 C26,22 25,23 24,23 C23,23 22,22 22,21 Z"/>
+    <path
+        android:fillColor="#FF9999"
+        android:pathData="M22,26 C22,25 23,24 24,24 C25,24 26,25 26,26 C26,27 25,28 24,28 C23,28 22,27 22,26 Z"/>
+    <path
+        android:fillColor="#000000"
+        android:pathData="M16,28 C16,27 17,26 18,26 C19,26 20,27 20,28 C20,29 19,30 18,30 C17,30 16,29 16,28 Z"/>
+    <path
+        android:fillColor="#000000"
+        android:pathData="M28,28 C28,27 29,26 30,26 C31,26 32,27 32,28 C32,29 31,30 30,30 C29,30 28,29 28,28 Z"/>
+</vector>

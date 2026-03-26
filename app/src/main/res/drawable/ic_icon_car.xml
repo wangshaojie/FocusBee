@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp"
+    android:height="48dp"
+    android:viewportWidth="48"
+    android:viewportHeight="48">
+    <!-- Car - Cartoon Style -->
+    <path
+        android:fillColor="#4169E1"
+        android:pathData="M10,24 L38,24 L38,32 C38,34 36,36 34,36 L14,36 C12,36 10,34 10,32 Z"/>
+    <path
+        android:fillColor="#4169E1"
+        android:pathData="M14,18 L34,18 L34,24 L14,24 Z"/>
+    <path
+        android:fillColor="#87CEEB"
+        android:pathData="M16,20 L32,20 L32,22 L16,22 Z"/>
+    <path
+        android:fillColor="#333333"
+        android:pathData="M16,32 A4,4 0 1,1 16,40 A4,4 0 1,1 16,32 Z"/>
+    <path
+        android:fillColor="#333333"
+        android:pathData="M32,32 A4,4 0 1,1 32,40 A4,4 0 1,1 32,32 Z"/>
+    <path
+        android:fillColor="#FFD700"
+        android:pathData="M10,26 A2,2 0 1,1 10,30 A2,2 0 1,1 10,26 Z"/>
+    <path
+        android:fillColor="#FFD700"
+        android:pathData="M38,26 A2,2 0 1,1 38,30 A2,2 0 1,1 38,26 Z"/>
+</vector>

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp"
+    android:height="48dp"
+    android:viewportWidth="48"
+    android:viewportHeight="48">
+    <!-- Heart - Cartoon Style -->
+    <path
+        android:fillColor="#FF4444"
+        android:pathData="M24,38 C24,38 8,26 8,16 C8,10 12,6 18,6 C21,6 24,9 24,9 C24,9 27,6 30,6 C36,6 40,10 40,16 C40,26 24,38 24,38 Z"/>
+    <path
+        android:fillColor="#FF6666"
+        android:pathData="M18,14 C16,12 16,10 18,10 C20,10 20,12 20,14"/>
+    <path
+        android:fillColor="#FF6666"
+        android:pathData="M30,14 C28,12 28,10 30,10 C32,10 32,12 32,14"/>
+</vector>

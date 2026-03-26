@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp"
+    android:height="48dp"
+    android:viewportWidth="48"
+    android:viewportHeight="48">
+    <!-- Cake - Cartoon Style -->
+    <path
+        android:fillColor="#FFB6C1"
+        android:pathData="M12,24 L36,24 L36,34 C36,36 34,38 32,38 L16,38 C14,38 12,36 12,34 Z"/>
+    <path
+        android:fillColor="#FF69B4"
+        android:pathData="M12,24 L36,24 L36,28 L12,28 Z"/>
+    <path
+        android:fillColor="#FF1493"
+        android:pathData="M14,28 L34,28 L34,30 L14,30 Z"/>
+    <path
+        android:fillColor="#FFD700"
+        android:pathData="M18,30 A3,3 0 1,1 18,36 A3,3 0 1,1 18,30 Z"/>
+    <path
+        android:fillColor="#FF69B4"
+        android:pathData="M24,28 A3,3 0 1,1 24,34 A3,3 0 1,1 24,28 Z"/>
+    <path
+        android:fillColor="#FF1493"
+        android:pathData="M30,30 A3,3 0 1,1 30,36 A3,3 0 1,1 30,30 Z"/>
+    <path
+        android:fillColor="#8B4513"
+        android:pathData="M22,16 L26,16 L26,24 L22,24 Z"/>
+    <path
+        android:fillColor="#FF69B4"
+        android:pathData="M20,12 C22,8 26,8 28,12"/>
+</vector>
