@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -169,23 +170,35 @@ private fun LevelSelectScreen(
         )
         Spacer(modifier = Modifier.height(32.dp))
 
-        // 关卡按钮
-        for (level in 1..totalLevels) {
-            val pairs = when (level) {
-                1 -> 6  // 3x4 = 12张 (6对)
-                2 -> 8  // 4x4 = 16张 (8对)
-                3 -> 10 // 4x5 = 20张 (10对)
-                else -> 15 // 5x6 = 30张 (15对)
-            }
-            Button(
-                onClick = { onLevelSelect(level) },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp)
-                    .padding(vertical = 4.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50))
-            ) {
-                Text("第 $level 关 ($pairs 对)", fontSize = 18.sp)
+        // 关卡按钮 - 使用 LazyColumn 支持 100 关
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            contentPadding = PaddingValues(vertical = 16.dp)
+        ) {
+            items(totalLevels) { index ->
+                val level = index + 1
+                val pairs = when {
+                    level <= 25 -> 6   // 简单: 3x4 = 12张 (6对)
+                    level <= 50 -> 8   // 中等: 4x4 = 16张 (8对)
+                    level <= 75 -> 10  // 困难: 4x5 = 20张 (10对)
+                    else -> 15         // 挑战: 5x6 = 30张 (15对)
+                }
+                val difficulty = when {
+                    level <= 25 -> "简单"
+                    level <= 50 -> "中等"
+                    level <= 75 -> "困难"
+                    else -> "挑战"
+                }
+                Button(
+                    onClick = { onLevelSelect(level) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50))
+                ) {
+                    Text("第 $level 关 ($difficulty · $pairs 对)", fontSize = 16.sp)
+                }
             }
         }
         }

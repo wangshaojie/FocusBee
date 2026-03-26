@@ -63,7 +63,10 @@
       "Bash(./gradlew compileDebugKotlin)",
       "Bash(git add:*)",
       "Bash(git reset:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(git remote:*)",
+      "Bash(git branch:*)",
+      "Bash(git push:*)"
     ]
   }
 }

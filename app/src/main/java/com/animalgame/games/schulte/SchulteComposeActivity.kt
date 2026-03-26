@@ -9,6 +9,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -145,36 +147,41 @@ private fun LevelSelectContent(
             onBack = onBack
         )
 
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+        // 关卡选择 - 使用 LazyColumn 支持 100 关
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            contentPadding = PaddingValues(24.dp)
         ) {
-            Text("舒尔特训练游戏", fontSize = 28.sp, fontWeight = FontWeight.Bold, color = Color(0xFF5C6BC0))
-            Spacer(modifier = Modifier.height(16.dp))
-            Text("在网格中按顺序点击数字", fontSize = 14.sp, color = Color(0xFF666666))
-            Spacer(modifier = Modifier.height(32.dp))
+            item {
+                Text("舒尔特训练游戏", fontSize = 28.sp, fontWeight = FontWeight.Bold, color = Color(0xFF5C6BC0))
+                Spacer(modifier = Modifier.height(16.dp))
+                Text("在网格中按顺序点击数字，训练专注力", fontSize = 14.sp, color = Color(0xFF666666))
+                Spacer(modifier = Modifier.height(24.dp))
+            }
 
-            // 难度选择
-            val difficulties = listOf(
-                Pair("简单 3×3", 1),
-                Pair("中等 4×4", 2),
-                Pair("困难 5×5", 3),
-                Pair("挑战 6×6", 4)
-            )
-
-            difficulties.forEachIndexed { index, (label, level) ->
+            items(100) { index ->
+                val level = index + 1
+                val gridSize = when {
+                    level <= 25 -> "3×3"
+                    level <= 50 -> "4×4"
+                    level <= 75 -> "5×5"
+                    else -> "6×6"
+                }
+                val difficulty = when {
+                    level <= 25 -> "简单"
+                    level <= 50 -> "中等"
+                    level <= 75 -> "困难"
+                    else -> "挑战"
+                }
                 Button(
                     onClick = { onLevelSelect(level) },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(56.dp)
-                        .padding(vertical = 4.dp),
+                        .height(56.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50))
                 ) {
-                    Text(label, fontSize = 18.sp)
+                    Text("第 $level 关 ($difficulty · $gridSize)", fontSize = 16.sp)
                 }
             }
         }

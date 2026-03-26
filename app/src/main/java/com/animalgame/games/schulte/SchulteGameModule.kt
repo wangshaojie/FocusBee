@@ -18,7 +18,7 @@ class SchulteGameModule : AbstractGameModule() {
     override val gameId: String = "schulte"
     override val gameName: String = "舒尔特训练"
     override val iconAsset: String = "logo1.png"
-    override val totalLevels: Int = 40
+    override val totalLevels: Int = 100
     override val description: String = "按顺序点击数字"
 
     override fun createIntent(context: Context): Intent {

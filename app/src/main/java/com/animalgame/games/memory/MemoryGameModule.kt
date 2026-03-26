@@ -18,7 +18,7 @@ class MemoryGameModule : AbstractGameModule() {
     override val gameId: String = "memory"
     override val gameName: String = "记忆翻牌"
     override val iconAsset: String = "logo1.png"
-    override val totalLevels: Int = 4  // 4关：简单/中等/困难/挑战
+    override val totalLevels: Int = 100  // 100关：每25关循环一种难度
     override val description: String = "训练短期记忆与注意力"
 
     // 游戏数据
@@ -30,11 +30,35 @@ class MemoryGameModule : AbstractGameModule() {
 
     // 关卡配置：gridSize = rows * columns（必须是偶数）
     // pairCount = gridSize / 2
+    // 100关：每25关循环一种难度
+    // 1-25关: 3x4 (简单), 26-50关: 4x4 (中等), 51-75关: 4x5 (困难), 76-100关: 5x6 (挑战)
+    private fun getGridSize(level: Int): GridSize {
+        val normalizedLevel = ((level - 1) % 100) + 1
+        return when {
+            normalizedLevel <= 25 -> GridSize(3, 4)   // 简单: 3x4 = 12张 (6对)
+            normalizedLevel <= 50 -> GridSize(4, 4)  // 中等: 4x4 = 16张 (8对)
+            normalizedLevel <= 75 -> GridSize(4, 5)  // 困难: 4x5 = 20张 (10对)
+            else -> GridSize(5, 6)                    // 挑战: 5x6 = 30张 (15对)
+        }
+    }
+
+    // 获取难度名称
+    private fun getDifficultyName(level: Int): String {
+        val normalizedLevel = ((level - 1) % 100) + 1
+        return when {
+            normalizedLevel <= 25 -> "简单"
+            normalizedLevel <= 50 -> "中等"
+            normalizedLevel <= 75 -> "困难"
+            else -> "挑战"
+        }
+    }
+
+    // 旧版静态配置（保留以防需要特定关卡配置）
     private val levelGridSize = mapOf(
         1 to GridSize(3, 4),   // 简单: 3x4 = 12张 (6对)
         2 to GridSize(4, 4),   // 中等: 4x4 = 16张 (8对)
         3 to GridSize(4, 5),   // 困难: 4x5 = 20张 (10对)
-        4 to GridSize(5, 6)    // 挑战: 5x6 = 30张 (15对)
+        4 to GridSize(5, 6)     // 挑战: 5x6 = 30张 (15对)
     )
 
     /**
@@ -69,7 +93,7 @@ class MemoryGameModule : AbstractGameModule() {
      */
     override fun startGame() {
         // 获取当前关卡的 gridSize
-        val gridSize = levelGridSize[currentLevel] ?: GridSize(2, 2)
+        val gridSize = getGridSize(currentLevel)
 
         // 动态计算 pairCount = gridSize / 2
         val pairCount = gridSize.pairCount
@@ -176,7 +200,7 @@ class MemoryGameModule : AbstractGameModule() {
                 isChecking = false  // 配对成功，立即解锁
 
                 // 检查是否完成
-                val gridSize = levelGridSize[currentLevel] ?: GridSize(2, 2)
+                val gridSize = getGridSize(currentLevel)
                 if (matchedPairs == gridSize.pairCount) {
                     completeGame()
                 }
@@ -227,7 +251,7 @@ class MemoryGameModule : AbstractGameModule() {
     private fun updateState() {
         val state = _state.value
         if (state is GameState.Playing) {
-            val gridSize = levelGridSize[currentLevel] ?: GridSize(2, 2)
+            val gridSize = getGridSize(currentLevel)
             _state.value = state.copy(
                 elapsedTime = System.currentTimeMillis() - startTime,
                 score = currentScore,
