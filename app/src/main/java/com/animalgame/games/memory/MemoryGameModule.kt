@@ -3,7 +3,6 @@ package com.animalgame.games.memory
 import com.animalgame.core.game.AbstractGameModule
 import com.animalgame.core.game.ActionResult
 import com.animalgame.core.game.GameAction
-import com.animalgame.core.game.GameResult
 import com.animalgame.core.game.GameState
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -18,8 +17,22 @@ class MemoryGameModule : AbstractGameModule() {
     override val gameId: String = "memory"
     override val gameName: String = "记忆翻牌"
     override val iconAsset: String = "logo1.png"
-    override val totalLevels: Int = 100  // 100关：每25关循环一种难度
+    override val totalLevels: Int = 200  // 4个难度 × 50关
     override val description: String = "训练短期记忆与注意力"
+
+    // 难度配置
+    enum class Difficulty(val levelCount: Int, val gridRows: Int, val gridColumns: Int, val displayName: String) {
+        EASY(50, 3, 4, "简单"),       // 3x4 = 12张 (6对)
+        MEDIUM(50, 4, 4, "中等"),     // 4x4 = 16张 (8对)
+        HARD(50, 4, 5, "困难"),      // 4x5 = 20张 (10对)
+        EXPERT(50, 5, 6, "挑战")     // 5x6 = 30张 (15对)
+    }
+
+    // 当前难度
+    private var currentDifficulty = Difficulty.EASY
+
+    // 当前难度内的关卡索引 (0-49)
+    private var levelIndex = 0
 
     // 游戏数据
     private var cards = listOf<MemoryGameCardData>()
@@ -27,39 +40,6 @@ class MemoryGameModule : AbstractGameModule() {
     private var matchedPairs = 0
     private var flipCount = 0  // 翻牌次数
     private var isChecking = false  // 检查中状态（禁止点击）
-
-    // 关卡配置：gridSize = rows * columns（必须是偶数）
-    // pairCount = gridSize / 2
-    // 100关：每25关循环一种难度
-    // 1-25关: 3x4 (简单), 26-50关: 4x4 (中等), 51-75关: 4x5 (困难), 76-100关: 5x6 (挑战)
-    private fun getGridSize(level: Int): GridSize {
-        val normalizedLevel = ((level - 1) % 100) + 1
-        return when {
-            normalizedLevel <= 25 -> GridSize(3, 4)   // 简单: 3x4 = 12张 (6对)
-            normalizedLevel <= 50 -> GridSize(4, 4)  // 中等: 4x4 = 16张 (8对)
-            normalizedLevel <= 75 -> GridSize(4, 5)  // 困难: 4x5 = 20张 (10对)
-            else -> GridSize(5, 6)                    // 挑战: 5x6 = 30张 (15对)
-        }
-    }
-
-    // 获取难度名称
-    private fun getDifficultyName(level: Int): String {
-        val normalizedLevel = ((level - 1) % 100) + 1
-        return when {
-            normalizedLevel <= 25 -> "简单"
-            normalizedLevel <= 50 -> "中等"
-            normalizedLevel <= 75 -> "困难"
-            else -> "挑战"
-        }
-    }
-
-    // 旧版静态配置（保留以防需要特定关卡配置）
-    private val levelGridSize = mapOf(
-        1 to GridSize(3, 4),   // 简单: 3x4 = 12张 (6对)
-        2 to GridSize(4, 4),   // 中等: 4x4 = 16张 (8对)
-        3 to GridSize(4, 5),   // 困难: 4x5 = 20张 (10对)
-        4 to GridSize(5, 6)     // 挑战: 5x6 = 30张 (15对)
-    )
 
     /**
      * 网格尺寸数据类
@@ -76,11 +56,29 @@ class MemoryGameModule : AbstractGameModule() {
         val pairCount: Int = totalCards / 2
     }
 
+    // 根据 level (1-200) 设置难度和关卡索引
+    private fun setLevel(level: Int) {
+        // level 1-50 -> EASY, 51-100 -> MEDIUM, 101-150 -> HARD, 151-200 -> EXPERT
+        currentDifficulty = when {
+            level <= 50 -> Difficulty.EASY
+            level <= 100 -> Difficulty.MEDIUM
+            level <= 150 -> Difficulty.HARD
+            else -> Difficulty.EXPERT
+        }
+        levelIndex = (level - 1) % 50  // 0-49
+    }
+
+    // 获取当前完整关卡号 (1-200)
+    private fun getFullLevel(): Int {
+        val difficultyIndex = Difficulty.entries.indexOf(currentDifficulty)
+        return difficultyIndex * 50 + levelIndex + 1
+    }
+
     /**
      * 开始游戏（跳过倒计时，直接开始）
      */
     override fun start(level: Int) {
-        currentLevel = level
+        setLevel(level)
         currentScore = 0
         mistakeCount = 0
 
@@ -88,12 +86,44 @@ class MemoryGameModule : AbstractGameModule() {
         startGame()
     }
 
+    // 公开方法供 UI 调用
+    fun nextLevel() {
+        // 检查当前难度内是否还有下一关
+        if (levelIndex < currentDifficulty.levelCount - 1) {
+            // 在当前难度内继续
+            levelIndex++
+            startGame()
+        }
+        // 如果当前难度已全部完成，不自动跳转，让 UI 显示完成状态
+    }
+
+    fun restartCurrentLevel() {
+        startGame()
+    }
+
+    // 返回到关卡选择页面
+    fun resetToIdle() {
+        stopTimer()
+        _state.value = GameState.Idle
+    }
+
+    // 获取当前难度名称
+    fun getCurrentDifficultyName(): String = currentDifficulty.displayName
+
+    // 获取当前难度内的关卡号 (1-50)
+    fun getCurrentLevelIndex(): Int = levelIndex + 1
+
+    // 检查是否已完成当前难度
+    fun isDifficultyCompleted(): Boolean {
+        return levelIndex >= currentDifficulty.levelCount - 1
+    }
+
     /**
      * 开始游戏
      */
     override fun startGame() {
-        // 获取当前关卡的 gridSize
-        val gridSize = getGridSize(currentLevel)
+        // 使用当前难度的网格大小
+        val gridSize = GridSize(currentDifficulty.gridRows, currentDifficulty.gridColumns)
 
         // 动态计算 pairCount = gridSize / 2
         val pairCount = gridSize.pairCount
@@ -124,7 +154,7 @@ class MemoryGameModule : AbstractGameModule() {
 
         // 进入游戏状态
         _state.value = GameState.Playing(
-            level = currentLevel,
+            level = getFullLevel(),
             elapsedTime = 0L,
             score = 0,
             data = mapOf(
@@ -200,7 +230,7 @@ class MemoryGameModule : AbstractGameModule() {
                 isChecking = false  // 配对成功，立即解锁
 
                 // 检查是否完成
-                val gridSize = getGridSize(currentLevel)
+                val gridSize = GridSize(currentDifficulty.gridRows, currentDifficulty.gridColumns)
                 if (matchedPairs == gridSize.pairCount) {
                     completeGame()
                 }
@@ -251,7 +281,7 @@ class MemoryGameModule : AbstractGameModule() {
     private fun updateState() {
         val state = _state.value
         if (state is GameState.Playing) {
-            val gridSize = getGridSize(currentLevel)
+            val gridSize = GridSize(currentDifficulty.gridRows, currentDifficulty.gridColumns)
             _state.value = state.copy(
                 elapsedTime = System.currentTimeMillis() - startTime,
                 score = currentScore,
@@ -274,7 +304,7 @@ class MemoryGameModule : AbstractGameModule() {
      */
     private fun completeGame() {
         val timeMillis = stopTimer()
-        val stars = calculateStars(timeMillis, mistakeCount, currentLevel)
+        val stars = calculateStars(timeMillis, mistakeCount, getFullLevel())
 
         // 使用基类方法完成关卡
         completeLevel(

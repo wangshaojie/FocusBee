@@ -85,6 +85,8 @@ fun SchulteGameScreen(
                 val clickedNumbersRaw = state.data["clickedNumbers"] as? Map<*, *> ?: emptyMap<Any, Boolean>()
                 val clickedNumbers: Map<Int, Boolean> = clickedNumbersRaw.mapKeys { it.key as? Int }.mapValues { it.value as? Boolean }.filterKeys { it != null } as Map<Int, Boolean>
                 val wrongNumber = state.data["wrongNumber"] as? Int ?: -1
+                val difficultyName = state.data["difficulty"] as? String
+                val levelInDifficulty = state.data["levelInDifficulty"] as? Int ?: 1
 
                 PlayingContent(
                     numbers = numbers,
@@ -92,7 +94,8 @@ fun SchulteGameScreen(
                     mistakes = mistakes,
                     clickedNumbers = clickedNumbers,
                     wrongNumber = wrongNumber,
-                    level = state.level,
+                    level = levelInDifficulty,
+                    difficultyName = difficultyName,
                     score = state.score,
                     onNumberClick = { number ->
                         module.onUserAction(com.animalgame.core.game.GameAction.TapIndex(number - 1))
@@ -105,9 +108,16 @@ fun SchulteGameScreen(
             }
 
             is com.animalgame.core.game.GameState.Completed -> {
-                // 游戏完成
+                // 游戏完成 - 从 module 获取当前难度信息
+                val difficultyName = module.getCurrentDifficultyName()
+                val levelInDifficulty = module.getCurrentLevelIndex()
+                val isLastInDifficulty = module.isDifficultyCompleted()
+
                 CompletedContent(
                     state = state,
+                    difficultyName = difficultyName,
+                    levelInDifficulty = levelInDifficulty,
+                    isLastInDifficulty = isLastInDifficulty,
                     onNextLevel = {
                         module.nextLevel()
                     },
@@ -196,6 +206,7 @@ private fun PlayingContent(
     clickedNumbers: Map<Int, Boolean>,
     wrongNumber: Int,
     level: Int,
+    difficultyName: String?,
     score: Int,
     onNumberClick: (Int) -> Unit,
     onBack: () -> Unit,
@@ -213,13 +224,17 @@ private fun PlayingContent(
         }
     }
 
-    // 计算网格大小
-    val gridSize = when {
-        level == 1 -> 3
-        level == 2 -> 4
-        level == 3 -> 5
-        else -> 6
+    // 计算网格大小 - 根据难度名称
+    val gridSize = when (difficultyName) {
+        "简单" -> 3
+        "中等" -> 4
+        "困难" -> 5
+        "挑战" -> 6
+        else -> 3
     }
+
+    // 获取正确的关卡号用于显示
+    val displayLevel = level
 
     Column(
         modifier = Modifier.fillMaxSize()
@@ -227,7 +242,8 @@ private fun PlayingContent(
         // 顶部导航栏
         GameTopBar(
             title = "舒尔特训练",
-            level = level,
+            level = displayLevel,
+            difficultyName = difficultyName,
             score = score,
             stars = when {
                 score >= 100 -> 3
@@ -376,6 +392,9 @@ private fun NumberCell(
 @Composable
 private fun CompletedContent(
     state: com.animalgame.core.game.GameState.Completed,
+    difficultyName: String?,
+    levelInDifficulty: Int,
+    isLastInDifficulty: Boolean,
     onNextLevel: () -> Unit,
     onReplay: () -> Unit,
     onBack: () -> Unit
@@ -385,7 +404,8 @@ private fun CompletedContent(
     ) {
         GameTopBar(
             title = "舒尔特训练",
-            level = state.level,
+            level = levelInDifficulty,
+            difficultyName = difficultyName,
             score = state.score,
             stars = state.stars,
             onBack = onBack
@@ -419,14 +439,25 @@ private fun CompletedContent(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            Button(
-                onClick = onNextLevel,
-                modifier = Modifier.fillMaxWidth().height(56.dp)
-            ) {
-                Text("下一关", fontSize = 18.sp)
+            // 下一关按钮 - 只在当前难度未完成时显示
+            if (!isLastInDifficulty) {
+                Button(
+                    onClick = onNextLevel,
+                    modifier = Modifier.fillMaxWidth().height(56.dp)
+                ) {
+                    Text("下一关", fontSize = 18.sp)
+                }
+                Spacer(modifier = Modifier.height(12.dp))
+            } else {
+                // 当前难度已完成，提示用户
+                Text(
+                    text = "🎉 ${difficultyName}难度已全部通关！",
+                    fontSize = 16.sp,
+                    color = Color(0xFF4CAF50),
+                    fontWeight = FontWeight.Medium
+                )
+                Spacer(modifier = Modifier.height(16.dp))
             }
-
-            Spacer(modifier = Modifier.height(12.dp))
 
             Button(
                 onClick = onReplay,

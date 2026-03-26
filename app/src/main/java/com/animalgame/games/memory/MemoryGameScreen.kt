@@ -49,6 +49,9 @@ fun MemoryGameUI(
     module: GameModule,
     onBack: () -> Unit
 ) {
+    // 转换为具体类型以访问扩展方法
+    val memoryModule = module as? MemoryGameModule
+
     // 收集状态
     val gameState by module.state.collectAsState()
 
@@ -61,7 +64,7 @@ fun MemoryGameUI(
             }
             else -> {
                 // 在游戏进行中或完成页面，返回到关卡选择
-                module.onUserAction(GameAction.Quit)
+                memoryModule?.resetToIdle() ?: module.onUserAction(GameAction.Quit)
             }
         }
     }
@@ -90,14 +93,20 @@ fun MemoryGameUI(
 
             is GameState.Playing -> {
                 // 游戏进行中
+                // 获取难度信息
+                val difficultyName = memoryModule?.getCurrentDifficultyName()
+                val levelInDifficulty = memoryModule?.getCurrentLevelIndex() ?: state.level
+
                 PlayingScreen(
                     state = state,
+                    difficultyName = difficultyName,
+                    levelInDifficulty = levelInDifficulty,
                     onCardClick = { index ->
                         module.onUserAction(GameAction.TapIndex(index))
                     },
                     onBack = handleBack,
                     onReset = {
-                        module.onUserAction(GameAction.Restart)
+                        memoryModule?.restartCurrentLevel() ?: module.onUserAction(GameAction.Restart)
                     }
                 )
             }
@@ -117,14 +126,21 @@ fun MemoryGameUI(
             }
 
             is GameState.Completed -> {
-                // 游戏完成
+                // 游戏完成 - 从 module 获取当前难度信息
+                val difficultyName = memoryModule?.getCurrentDifficultyName()
+                val levelInDifficulty = memoryModule?.getCurrentLevelIndex() ?: state.level
+                val isLastInDifficulty = memoryModule?.isDifficultyCompleted() ?: false
+
                 CompletedScreen(
                     state = state,
+                    difficultyName = difficultyName,
+                    levelInDifficulty = levelInDifficulty,
+                    isLastInDifficulty = isLastInDifficulty,
                     onNextLevel = {
-                        module.onUserAction(GameAction.NextLevel)
+                        memoryModule?.nextLevel()
                     },
                     onReplay = {
-                        module.onUserAction(GameAction.Restart)
+                        memoryModule?.restartCurrentLevel() ?: module.onUserAction(GameAction.Restart)
                     },
                     onBack = handleBack
                 )
@@ -168,37 +184,32 @@ private fun LevelSelectScreen(
             fontSize = 14.sp,
             color = Color(0xFF666666)
         )
+        Spacer(modifier = Modifier.height(16.dp))
+        Text(
+            text = "按顺序点击相同的卡片",
+            fontSize = 14.sp,
+            color = Color(0xFF666666)
+        )
         Spacer(modifier = Modifier.height(32.dp))
 
-        // 关卡按钮 - 使用 LazyColumn 支持 100 关
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-            contentPadding = PaddingValues(vertical = 16.dp)
-        ) {
-            items(totalLevels) { index ->
-                val level = index + 1
-                val pairs = when {
-                    level <= 25 -> 6   // 简单: 3x4 = 12张 (6对)
-                    level <= 50 -> 8   // 中等: 4x4 = 16张 (8对)
-                    level <= 75 -> 10  // 困难: 4x5 = 20张 (10对)
-                    else -> 15         // 挑战: 5x6 = 30张 (15对)
-                }
-                val difficulty = when {
-                    level <= 25 -> "简单"
-                    level <= 50 -> "中等"
-                    level <= 75 -> "困难"
-                    else -> "挑战"
-                }
-                Button(
-                    onClick = { onLevelSelect(level) },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(56.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50))
-                ) {
-                    Text("第 $level 关 ($difficulty · $pairs 对)", fontSize = 16.sp)
-                }
+        // 难度选择
+        val difficulties = listOf(
+            Triple("简单 3×4", 1, "6对"),
+            Triple("中等 4×4", 51, "8对"),
+            Triple("困难 4×5", 101, "10对"),
+            Triple("挑战 5×6", 151, "15对")
+        )
+
+        difficulties.forEachIndexed { _, (label, startLevel, pairs) ->
+            Button(
+                onClick = { onLevelSelect(startLevel) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp)
+                    .padding(vertical = 4.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50))
+            ) {
+                Text("$label ($pairs)", fontSize = 18.sp)
             }
         }
         }
@@ -229,6 +240,8 @@ private fun ReadyScreen(countdown: Int) {
 @Composable
 private fun PlayingScreen(
     state: GameState.Playing,
+    difficultyName: String?,
+    levelInDifficulty: Int,
     onCardClick: (Int) -> Unit,
     onBack: () -> Unit,
     onReset: () -> Unit = {}
@@ -277,7 +290,8 @@ private fun PlayingScreen(
         // 统一顶部导航栏
         GameTopBar(
             title = "记忆翻牌",
-            level = state.level,
+            level = levelInDifficulty,
+            difficultyName = difficultyName,
             score = state.score,
             stars = calculateStars(state.score, totalPairs),
             onBack = onBack
@@ -568,6 +582,9 @@ private fun PausedScreen(
 @Composable
 private fun CompletedScreen(
     state: GameState.Completed,
+    difficultyName: String?,
+    levelInDifficulty: Int,
+    isLastInDifficulty: Boolean,
     onNextLevel: () -> Unit,
     onReplay: () -> Unit,
     onBack: () -> Unit
@@ -600,17 +617,25 @@ private fun CompletedScreen(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // 显示额外数据
-        val extraData = (state as? GameState.Completed)?.let { null } ?: state
-
-        Button(
-            onClick = onNextLevel,
-            modifier = Modifier.fillMaxWidth().height(56.dp)
-        ) {
-            Text("下一关", fontSize = 18.sp)
+        // 下一关按钮 - 只在当前难度未完成时显示
+        if (!isLastInDifficulty) {
+            Button(
+                onClick = onNextLevel,
+                modifier = Modifier.fillMaxWidth().height(56.dp)
+            ) {
+                Text("下一关", fontSize = 18.sp)
+            }
+            Spacer(modifier = Modifier.height(12.dp))
+        } else {
+            // 当前难度已完成，提示用户
+            Text(
+                text = "🎉 ${difficultyName}难度已全部通关！",
+                fontSize = 16.sp,
+                color = Color(0xFF4CAF50),
+                fontWeight = FontWeight.Medium
+            )
+            Spacer(modifier = Modifier.height(16.dp))
         }
-
-        Spacer(modifier = Modifier.height(12.dp))
 
         Button(
             onClick = onReplay,

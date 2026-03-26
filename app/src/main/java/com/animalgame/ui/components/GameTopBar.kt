@@ -33,6 +33,7 @@ fun GameTopBar(
     level: Int = 1,
     score: Int = 0,
     stars: Int = 0,
+    difficultyName: String? = null,
     onBack: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -40,6 +41,13 @@ fun GameTopBar(
     val primaryColor = Color(0xFF81D4FA)  // 浅蓝
     val starColor = Color(0xFFFFD54F)    // 金色
     val grayColor = Color(0xFFE0E0E0)    // 灰色（未点亮星星）
+
+    // 构造关卡显示文本
+    val levelText = if (difficultyName != null) {
+        "$difficultyName · 第${level}关"
+    } else {
+        "第${level}关"
+    }
 
     Row(
         modifier = modifier
@@ -77,7 +85,7 @@ fun GameTopBar(
                 color = Color(0xFF5C6BC0)
             )
             Text(
-                text = " · 第${level}关",
+                text = " · $levelText",
                 fontSize = 14.sp,
                 color = Color(0xFF9E9E9E)
             )

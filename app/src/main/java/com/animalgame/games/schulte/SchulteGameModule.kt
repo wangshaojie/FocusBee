@@ -7,7 +7,6 @@ import com.animalgame.core.game.ActionResult
 import com.animalgame.core.game.GameAction
 import com.animalgame.core.game.GameState
 import com.animalgame.core.manager.GameRegistry
-import kotlinx.coroutines.delay
 
 /**
  * 舒尔特训练游戏模块
@@ -18,16 +17,48 @@ class SchulteGameModule : AbstractGameModule() {
     override val gameId: String = "schulte"
     override val gameName: String = "舒尔特训练"
     override val iconAsset: String = "logo1.png"
-    override val totalLevels: Int = 100
+    override val totalLevels: Int = 200  // 4个难度 × 50关
     override val description: String = "按顺序点击数字"
+
+    // 难度配置
+    enum class Difficulty(val levelCount: Int, val gridSize: Int, val displayName: String) {
+        EASY(50, 3, "简单"),
+        MEDIUM(50, 4, "中等"),
+        HARD(50, 5, "困难"),
+        EXPERT(50, 6, "挑战")
+    }
+
+    // 当前难度
+    private var currentDifficulty = Difficulty.EASY
+
+    // 当前难度内的关卡索引 (0-9)
+    private var levelIndex = 0
 
     override fun createIntent(context: Context): Intent {
         return Intent(context, SchulteComposeActivity::class.java)
     }
 
+    // 根据 level (1-200) 设置难度和关卡索引
+    private fun setLevel(level: Int) {
+        // level 1-50 -> EASY, 51-100 -> MEDIUM, 101-150 -> HARD, 151-200 -> EXPERT
+        currentDifficulty = when {
+            level <= 50 -> Difficulty.EASY
+            level <= 100 -> Difficulty.MEDIUM
+            level <= 150 -> Difficulty.HARD
+            else -> Difficulty.EXPERT
+        }
+        levelIndex = (level - 1) % 50  // 0-49
+    }
+
+    // 获取当前完整关卡号 (1-40)
+    private fun getFullLevel(): Int {
+        val difficultyIndex = Difficulty.entries.indexOf(currentDifficulty)
+        return difficultyIndex * 10 + levelIndex + 1
+    }
+
     // 覆盖 start 方法，跳过倒计时，直接开始游戏
     override fun start(level: Int) {
-        currentLevel = level
+        setLevel(level)
         currentScore = 0
         mistakeCount = 0
 
@@ -37,9 +68,13 @@ class SchulteGameModule : AbstractGameModule() {
 
     // 公开方法供 UI 调用
     fun nextLevel() {
-        if (currentLevel < totalLevels) {
-            start(currentLevel + 1)
+        // 检查当前难度内是否还有下一关
+        if (levelIndex < currentDifficulty.levelCount - 1) {
+            // 在当前难度内继续
+            levelIndex++
+            startGame()
         }
+        // 如果当前难度已全部完成，不自动跳转，让 UI 显示完成状态
     }
 
     fun restartCurrentLevel() {
@@ -52,14 +87,20 @@ class SchulteGameModule : AbstractGameModule() {
         _state.value = GameState.Idle
     }
 
+    // 获取当前难度名称
+    fun getCurrentDifficultyName(): String = currentDifficulty.displayName
+
+    // 获取当前难度内的关卡号 (1-10)
+    fun getCurrentLevelIndex(): Int = levelIndex + 1
+
+    // 检查是否已完成当前难度
+    fun isDifficultyCompleted(): Boolean {
+        return levelIndex >= currentDifficulty.levelCount - 1
+    }
+
     override fun startGame() {
-        // 根据关卡计算网格大小
-        val gridSize = when {
-            currentLevel == 1 -> 3
-            currentLevel == 2 -> 4
-            currentLevel == 3 -> 5
-            else -> 6
-        }
+        // 使用当前难度的网格大小
+        val gridSize = currentDifficulty.gridSize
 
         // 生成随机数字序列
         val totalNumbers = gridSize * gridSize
@@ -67,7 +108,7 @@ class SchulteGameModule : AbstractGameModule() {
 
         // 舒尔特训练的具体实现
         _state.value = GameState.Playing(
-            level = currentLevel,
+            level = getFullLevel(),
             elapsedTime = 0L,
             score = 0,
             data = mapOf(
@@ -76,7 +117,9 @@ class SchulteGameModule : AbstractGameModule() {
                 "mistakes" to 0,
                 "gridSize" to gridSize,
                 "clickedNumbers" to mutableMapOf<Int, Boolean>(),
-                "wrongNumber" to -1  // 当前显示红色的错误数字
+                "wrongNumber" to -1,
+                "difficulty" to currentDifficulty.displayName,
+                "levelInDifficulty" to (levelIndex + 1)
             )
         )
         startTimer()
@@ -96,7 +139,7 @@ class SchulteGameModule : AbstractGameModule() {
 
                 if (tappedNumber == currentNumber) {
                     // 正确点击
-                    clickedNumbers[tappedNumber] = true  // true = correct
+                    clickedNumbers[tappedNumber] = true
 
                     val nextNumber = currentNumber + 1
                     val totalNumbers = gridSize * gridSize
@@ -104,9 +147,9 @@ class SchulteGameModule : AbstractGameModule() {
                     if (nextNumber > totalNumbers) {
                         // 游戏完成
                         stopTimer()
-                        val stars = calculateStars(currentState.elapsedTime, mistakes, currentState.level)
+                        val stars = calculateStars(currentState.elapsedTime, mistakes, getFullLevel())
                         _state.value = GameState.Completed(
-                            level = currentState.level,
+                            level = getFullLevel(),
                             score = currentState.score,
                             stars = stars,
                             timeMillis = currentState.elapsedTime,
@@ -122,8 +165,7 @@ class SchulteGameModule : AbstractGameModule() {
                         )
                     }
                 } else {
-                    // 错误点击 - 记录错误但不在这里增加，让 UI 显示红色
-                    // 将错误标记为 false
+                    // 错误点击
                     clickedNumbers[tappedNumber] = false
 
                     val newMistakes = mistakes + 1
@@ -134,7 +176,7 @@ class SchulteGameModule : AbstractGameModule() {
                             put("mistakes", newMistakes)
                             put("score", newScore)
                             put("clickedNumbers", clickedNumbers)
-                            put("wrongNumber", tappedNumber)  // 记录错误点击的数字，UI 会显示红色
+                            put("wrongNumber", tappedNumber)
                         }
                     )
                 }
@@ -147,32 +189,17 @@ class SchulteGameModule : AbstractGameModule() {
                 return ActionResult.Success
             }
 
-            is GameAction.NextLevel -> {
-                if (currentLevel < totalLevels) {
-                    start(currentLevel + 1)
-                }
-                return ActionResult.Success
-            }
-
             else -> return super.onUserAction(action)
         }
     }
 
     override fun calculateStars(timeMillis: Long, mistakes: Int, level: Int): Int {
-        // 根据用时和错误次数计算星星
         var stars = 1
-        val gridSize = when {
-            level == 1 -> 3
-            level == 2 -> 4
-            level == 3 -> 5
-            else -> 6
-        }
+        val gridSize = currentDifficulty.gridSize
 
-        // 用时少于预期加星
-        val expectedTime = gridSize * gridSize * 500L // 每格0.5秒预期
+        val expectedTime = gridSize * gridSize * 500L
         if (timeMillis < expectedTime) stars++
 
-        // 无错误加星
         if (mistakes == 0) stars++
 
         return minOf(stars, 3)
