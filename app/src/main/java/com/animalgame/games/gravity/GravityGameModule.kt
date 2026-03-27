@@ -66,7 +66,7 @@ class GravityGameModule : AbstractGameModule() {
     }
 
     /**
-     * 覆盖 start 方法，显示倒计时后开始游戏
+     * 覆盖 start 方法，直接开始游戏（无倒计时）
      */
     override fun start(level: Int) {
         setLevel(level)
@@ -74,17 +74,8 @@ class GravityGameModule : AbstractGameModule() {
         mistakeCount = 0
         gameStartTime = System.currentTimeMillis()
 
-        // 显示倒计时
-        _state.value = GameState.Ready(level = getFullLevel(), countdown = 3)
-
-        gameScope.launch {
-            for (i in 3 downTo 1) {
-                _state.value = GameState.Ready(level = getFullLevel(), countdown = i)
-                delay(1000)
-            }
-            // 倒计时结束，开始游戏
-            startGame()
-        }
+        // 直接开始游戏
+        startGame()
     }
 
     /**

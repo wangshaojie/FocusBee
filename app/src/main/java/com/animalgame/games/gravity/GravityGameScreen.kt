@@ -254,6 +254,13 @@ private fun PlayingScreen(
         module.onGameEvent(event)
     }
 
+    // 当游戏状态变为 Playing 时，启动游戏
+    LaunchedEffect(state) {
+        if (state is GameState.Playing) {
+            gameViewRef?.startGame()
+        }
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -303,6 +310,9 @@ private fun PlayingScreen(
                                 }
                             }
                         }
+
+                        // 启动游戏线程
+                        view.startThread()
 
                         gameViewRef = view
                     }
