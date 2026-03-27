@@ -68,11 +68,9 @@ fun SchulteGameScreen(
     ) {
         when (val state = gameState) {
             is com.animalgame.core.game.GameState.Idle -> {
-                // 关卡选择
+                // 关卡选择 - 传递 module 引用
                 LevelSelectContent(
-                    onLevelSelect = { level ->
-                        module.start(level)
-                    },
+                    module = module,
                     onBack = handleBack
                 )
             }
@@ -129,11 +127,9 @@ fun SchulteGameScreen(
             }
 
             else -> {
-                // 其他状态（如 Ready 倒计时），显示关卡选择
+                // 其他状态，显示关卡选择
                 LevelSelectContent(
-                    onLevelSelect = { level ->
-                        module.start(level)
-                    },
+                    module = module,
                     onBack = handleBack
                 )
             }
@@ -143,7 +139,7 @@ fun SchulteGameScreen(
 
 @Composable
 private fun LevelSelectContent(
-    onLevelSelect: (Int) -> Unit,
+    module: SchulteGameModule,
     onBack: () -> Unit
 ) {
     Column(
@@ -157,41 +153,43 @@ private fun LevelSelectContent(
             onBack = onBack
         )
 
-        // 关卡选择 - 使用 LazyColumn 支持 100 关
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-            contentPadding = PaddingValues(24.dp)
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
-            item {
-                Text("舒尔特训练游戏", fontSize = 28.sp, fontWeight = FontWeight.Bold, color = Color(0xFF5C6BC0))
-                Spacer(modifier = Modifier.height(16.dp))
-                Text("在网格中按顺序点击数字，训练专注力", fontSize = 14.sp, color = Color(0xFF666666))
-                Spacer(modifier = Modifier.height(24.dp))
-            }
+            Text("舒尔特训练游戏", fontSize = 28.sp, fontWeight = FontWeight.Bold, color = Color(0xFF5C6BC0))
+            Spacer(modifier = Modifier.height(16.dp))
+            Text("在网格中按顺序点击数字，训练专注力", fontSize = 14.sp, color = Color(0xFF666666))
+            Spacer(modifier = Modifier.height(32.dp))
 
-            items(100) { index ->
-                val level = index + 1
-                val gridSize = when {
-                    level <= 25 -> "3×3"
-                    level <= 50 -> "4×4"
-                    level <= 75 -> "5×5"
-                    else -> "6×6"
-                }
-                val difficulty = when {
-                    level <= 25 -> "简单"
-                    level <= 50 -> "中等"
-                    level <= 75 -> "困难"
-                    else -> "挑战"
-                }
+            // 难度选择按钮
+            val difficulties = listOf(
+                Triple("简单", "3×3", SchulteGameModule.Difficulty.EASY),
+                Triple("中等", "4×4", SchulteGameModule.Difficulty.MEDIUM),
+                Triple("困难", "5×5", SchulteGameModule.Difficulty.HARD),
+                Triple("挑战", "6×6", SchulteGameModule.Difficulty.EXPERT)
+            )
+
+            difficulties.forEachIndexed { index, (label, grid, difficulty) ->
                 Button(
-                    onClick = { onLevelSelect(level) },
+                    onClick = {
+                        module.setDifficulty(difficulty)
+                        module.start(1)
+                    },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(56.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50))
+                        .height(64.dp)
+                        .padding(vertical = 4.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50)),
+                    shape = RoundedCornerShape(16.dp)
                 ) {
-                    Text("第 $level 关 ($difficulty · $gridSize)", fontSize = 16.sp)
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text("$label · $grid", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                        Text("50关", fontSize = 12.sp)
+                    }
                 }
             }
         }

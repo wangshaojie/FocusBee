@@ -34,6 +34,15 @@ class MemoryGameModule : AbstractGameModule() {
     // 当前难度内的关卡索引 (0-49)
     private var levelIndex = 0
 
+    // 设置难度（由 UI 调用）
+    fun setDifficulty(difficulty: Difficulty) {
+        currentDifficulty = difficulty
+        levelIndex = 0  // 重置到第一关
+    }
+
+    // 获取当前难度
+    fun getCurrentDifficulty(): Difficulty = currentDifficulty
+
     // 游戏数据
     private var cards = listOf<MemoryGameCardData>()
     private var flippedIndices = listOf<Int>()
@@ -56,22 +65,15 @@ class MemoryGameModule : AbstractGameModule() {
         val pairCount: Int = totalCards / 2
     }
 
-    // 根据 level (1-200) 设置难度和关卡索引
+    // 根据 level (1-50) 在当前难度内设置关卡
     private fun setLevel(level: Int) {
-        // level 1-50 -> EASY, 51-100 -> MEDIUM, 101-150 -> HARD, 151-200 -> EXPERT
-        currentDifficulty = when {
-            level <= 50 -> Difficulty.EASY
-            level <= 100 -> Difficulty.MEDIUM
-            level <= 150 -> Difficulty.HARD
-            else -> Difficulty.EXPERT
-        }
-        levelIndex = (level - 1) % 50  // 0-49
+        // level 是当前难度内的关卡号 (1-50)
+        levelIndex = (level - 1).coerceIn(0, currentDifficulty.levelCount - 1)
     }
 
-    // 获取当前完整关卡号 (1-200)
+    // 获取当前完整关卡号（仅用于显示）
     private fun getFullLevel(): Int {
-        val difficultyIndex = Difficulty.entries.indexOf(currentDifficulty)
-        return difficultyIndex * 50 + levelIndex + 1
+        return levelIndex + 1
     }
 
     /**

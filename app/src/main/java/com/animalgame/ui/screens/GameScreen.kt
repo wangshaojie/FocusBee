@@ -15,6 +15,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.sp
 import com.animalgame.core.manager.ScoreManager
 import com.animalgame.core.model.GameResult
+import com.animalgame.games.colormind.ColorMindGameModule
+import com.animalgame.games.colormind.ColorMindGameScreen
 import com.animalgame.games.animal.AnimalGameActivity
 import com.animalgame.games.memory.MemoryGameModule
 import com.animalgame.games.memory.MemoryGameUI
@@ -89,6 +91,36 @@ fun GameScreen(
                     onBack()
                 }
             }
+        }
+        "color_mind" -> {
+            // 颜色识别训练
+            val scoreManager = remember { ScoreManager.getInstance(context) }
+            val module = remember { ColorMindGameModule() }
+
+            // 收集结果并保存
+            LaunchedEffect(Unit) {
+                module.result.collectLatest { result ->
+                    result?.let {
+                        // 转换为模型使用的 GameResult
+                        val modelResult = GameResult(
+                            gameId = it.gameId,
+                            level = it.level,
+                            score = it.score,
+                            stars = it.stars,
+                            isCompleted = it.isSuccess,
+                            timeMillis = it.timeMillis,
+                            mistakes = it.mistakes
+                        )
+                        scoreManager.reportResult(modelResult)
+                    }
+                }
+            }
+
+            // 使用 Color Mind UI
+            ColorMindGameScreen(
+                module = module,
+                onBack = onBack
+            )
         }
         else -> {
             // 未知游戏

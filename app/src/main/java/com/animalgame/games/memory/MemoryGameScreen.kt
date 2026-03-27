@@ -78,10 +78,7 @@ fun MemoryGameUI(
             is GameState.Idle -> {
                 // 关卡选择
                 LevelSelectScreen(
-                    totalLevels = module.totalLevels,
-                    onLevelSelect = { level ->
-                        module.start(level)
-                    },
+                    module = memoryModule!!,
                     onBack = handleBack
                 )
             }
@@ -162,8 +159,7 @@ fun MemoryGameUI(
  */
 @Composable
 private fun LevelSelectScreen(
-    totalLevels: Int,
-    onLevelSelect: (Int) -> Unit,
+    module: MemoryGameModule,
     onBack: () -> Unit
 ) {
     Column(
@@ -180,11 +176,18 @@ private fun LevelSelectScreen(
             verticalArrangement = Arrangement.Center
         ) {
         Text(
+            text = "记忆翻牌游戏",
+            fontSize = 28.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color(0xFF5C6BC0)
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+        Text(
             text = "训练短期记忆与注意力",
             fontSize = 14.sp,
             color = Color(0xFF666666)
         )
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(8.dp))
         Text(
             text = "按顺序点击相同的卡片",
             fontSize = 14.sp,
@@ -194,15 +197,18 @@ private fun LevelSelectScreen(
 
         // 难度选择
         val difficulties = listOf(
-            Triple("简单 3×4", 1, "6对"),
-            Triple("中等 4×4", 51, "8对"),
-            Triple("困难 4×5", 101, "10对"),
-            Triple("挑战 5×6", 151, "15对")
+            Triple("简单 3×4", "6对", MemoryGameModule.Difficulty.EASY),
+            Triple("中等 4×4", "8对", MemoryGameModule.Difficulty.MEDIUM),
+            Triple("困难 4×5", "10对", MemoryGameModule.Difficulty.HARD),
+            Triple("挑战 5×6", "15对", MemoryGameModule.Difficulty.EXPERT)
         )
 
-        difficulties.forEachIndexed { _, (label, startLevel, pairs) ->
+        difficulties.forEachIndexed { _, (label, pairs, difficulty) ->
             Button(
-                onClick = { onLevelSelect(startLevel) },
+                onClick = {
+                    module.setDifficulty(difficulty)
+                    module.start(1)
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp)

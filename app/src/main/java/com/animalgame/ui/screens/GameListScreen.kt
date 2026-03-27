@@ -202,6 +202,7 @@ private fun getGameEmoji(gameName: String): String {
         "萌音大挑战" -> "🐕"
         "舒尔特训练" -> "🔢"
         "记忆翻牌" -> "🃏"
+        "颜色识别" -> "🎨"
         else -> "🎮"
     }
 }

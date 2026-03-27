@@ -28,32 +28,31 @@ class SchulteGameModule : AbstractGameModule() {
         EXPERT(50, 6, "挑战")
     }
 
-    // 当前难度
+    // 当前难度（不随关卡变化）
     private var currentDifficulty = Difficulty.EASY
 
-    // 当前难度内的关卡索引 (0-9)
+    // 当前难度内的关卡索引 (0-49)
     private var levelIndex = 0
 
     override fun createIntent(context: Context): Intent {
         return Intent(context, SchulteComposeActivity::class.java)
     }
 
-    // 根据 level (1-200) 设置难度和关卡索引
-    private fun setLevel(level: Int) {
-        // level 1-50 -> EASY, 51-100 -> MEDIUM, 101-150 -> HARD, 151-200 -> EXPERT
-        currentDifficulty = when {
-            level <= 50 -> Difficulty.EASY
-            level <= 100 -> Difficulty.MEDIUM
-            level <= 150 -> Difficulty.HARD
-            else -> Difficulty.EXPERT
-        }
-        levelIndex = (level - 1) % 50  // 0-49
+    // 设置难度（由 UI 调用）
+    fun setDifficulty(difficulty: Difficulty) {
+        currentDifficulty = difficulty
+        levelIndex = 0  // 重置到第一关
     }
 
-    // 获取当前完整关卡号 (1-40)
+    // 根据 level (1-50) 在当前难度内设置关卡
+    private fun setLevel(level: Int) {
+        // level 是当前难度内的关卡号 (1-50)
+        levelIndex = (level - 1).coerceIn(0, currentDifficulty.levelCount - 1)
+    }
+
+    // 获取当前完整关卡号（仅用于显示）
     private fun getFullLevel(): Int {
-        val difficultyIndex = Difficulty.entries.indexOf(currentDifficulty)
-        return difficultyIndex * 10 + levelIndex + 1
+        return levelIndex + 1
     }
 
     // 覆盖 start 方法，跳过倒计时，直接开始游戏
@@ -90,13 +89,16 @@ class SchulteGameModule : AbstractGameModule() {
     // 获取当前难度名称
     fun getCurrentDifficultyName(): String = currentDifficulty.displayName
 
-    // 获取当前难度内的关卡号 (1-10)
+    // 获取当前难度内的关卡号 (1-50)
     fun getCurrentLevelIndex(): Int = levelIndex + 1
 
     // 检查是否已完成当前难度
     fun isDifficultyCompleted(): Boolean {
         return levelIndex >= currentDifficulty.levelCount - 1
     }
+
+    // 获取当前难度
+    fun getCurrentDifficulty(): Difficulty = currentDifficulty
 
     override fun startGame() {
         // 使用当前难度的网格大小

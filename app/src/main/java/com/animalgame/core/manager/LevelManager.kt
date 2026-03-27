@@ -24,13 +24,14 @@ object LevelManager {
             "schulte" -> getSchulteLevels()
             "animal" -> getAnimalLevels()
             "memory" -> getMemoryLevels()
+            "color_mind" -> getColorMindLevels()
             else -> emptyList()
         }
     }
 
     /**
      * 舒尔特训练关卡配置
-     * 4个难度，每个难度10关
+     * 4个难度，每个难度50关
      */
     private fun getSchulteLevels(): List<LevelConfig> {
         val levels = mutableListOf<LevelConfig>()
@@ -42,10 +43,10 @@ object LevelManager {
         )
 
         difficulties.forEachIndexed { diffIndex, (name, size, baseStars) ->
-            for (level in 1..10) {
+            for (level in 1..50) {
                 levels.add(
                     LevelConfig(
-                        level = diffIndex * 10 + level,
+                        level = diffIndex * 50 + level,
                         gridSize = size,
                         baseStars = baseStars,
                         description = "$name 第$level 关"
@@ -76,6 +77,7 @@ object LevelManager {
 
     /**
      * 记忆翻牌关卡配置
+     * 4个难度，每个难度50关
      */
     private fun getMemoryLevels(): List<LevelConfig> {
         val levels = mutableListOf<LevelConfig>()
@@ -87,7 +89,7 @@ object LevelManager {
         )
 
         difficulties.forEachIndexed { diffIndex, (name, pairs, baseStars) ->
-            for (level in 1..10) {
+            for (level in 1..50) {
                 levels.add(
                     LevelConfig(
                         level = diffIndex * 10 + level,
@@ -138,5 +140,33 @@ object LevelManager {
             3 -> "👑"
             else -> "⭐"
         }
+    }
+
+    /**
+     * 颜色识别训练关卡配置
+     * 4个难度，每个难度50关
+     */
+    private fun getColorMindLevels(): List<LevelConfig> {
+        val levels = mutableListOf<LevelConfig>()
+        val difficulties = listOf(
+            Triple("简单", 10, 15),   // 颜色数2，基础星星15
+            Triple("中等", 15, 20),   // 颜色数3，基础星星20
+            Triple("困难", 20, 25),   // 颜色数4，基础星星25
+            Triple("挑战", 25, 30)   // 颜色数5，基础星星30
+        )
+
+        difficulties.forEachIndexed { diffIndex, (name, questionCount, baseStars) ->
+            for (level in 1..50) {
+                levels.add(
+                    LevelConfig(
+                        level = diffIndex * 10 + level,
+                        gridSize = questionCount,
+                        baseStars = baseStars,
+                        description = "$name 第$level 关"
+                    )
+                )
+            }
+        }
+        return levels
     }
 }

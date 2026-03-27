@@ -197,6 +197,9 @@ sealed class GameAction {
     data class TapIndex(val index: Int) : GameAction()          // 按索引点击（网格用）
     data class Swipe(val direction: SwipeDirection) : GameAction() // 滑动
     data class Input(val text: String) : GameAction()           // 文本输入
+
+    // Color Mind 专用操作
+    data class ColorMindAnswer(val selectedColor: String) : GameAction()  // 颜色游戏回答
 }
 
 /**

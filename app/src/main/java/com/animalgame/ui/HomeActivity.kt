@@ -9,6 +9,7 @@ import com.animalgame.core.manager.SettingsManager
 import com.animalgame.games.animal.registerAnimalGame
 import com.animalgame.games.schulte.registerSchulteGame
 import com.animalgame.games.memory.registerMemoryGame
+import com.animalgame.games.colormind.registerColorMindGame
 import kotlinx.coroutines.launch
 
 class HomeActivity : AppCompatActivity() {
@@ -60,6 +61,7 @@ class HomeActivity : AppCompatActivity() {
         registerAnimalGame()
         registerSchulteGame()
         registerMemoryGame()
+        registerColorMindGame()
     }
 
     override fun onResume() {
