@@ -91,13 +91,6 @@ fun GameListScreen(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Spacer(modifier = Modifier.weight(1f))
-                Text(
-                    text = "专注力训练营",
-                    fontSize = 28.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = ScreenColors.PrimaryText
-                )
                 IconButton(
                     onClick = onSettingsClick,
                     modifier = Modifier.size(48.dp)
@@ -108,6 +101,13 @@ fun GameListScreen(
                         tint = ScreenColors.PrimaryText
                     )
                 }
+                Text(
+                    text = "专注力训练营",
+                    fontSize = 28.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = ScreenColors.PrimaryText
+                )
+                Spacer(modifier = Modifier.size(48.dp))
             }
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -203,6 +203,7 @@ private fun getGameEmoji(gameName: String): String {
         "舒尔特训练" -> "🔢"
         "记忆翻牌" -> "🃏"
         "颜色识别" -> "🎨"
+        "平衡小球" -> "🎯"
         else -> "🎮"
     }
 }
