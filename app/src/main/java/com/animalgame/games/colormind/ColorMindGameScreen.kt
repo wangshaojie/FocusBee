@@ -14,12 +14,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.animalgame.core.game.GameAction
 import com.animalgame.core.game.GameModule
 import com.animalgame.core.game.GameState
 import com.animalgame.ui.components.GameTopBar
+import com.animalgame.ui.components.DifficultyCard
+import com.animalgame.ui.components.DifficultyColors
 
 /**
  * Color Mind 游戏 UI
@@ -139,79 +142,97 @@ fun ColorMindGameScreen(
 }
 
 /**
- * 关卡选择屏幕
+ * 关卡选择屏幕 - 卡通风格
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun LevelSelectScreen(
     module: ColorMindGameModule,
     onBack: () -> Unit
 ) {
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color(0xFFF8F6FF))
+        modifier = Modifier.fillMaxSize()
     ) {
-        GameTopBar(title = "颜色识别", level = 0, score = 0, stars = 0, onBack = onBack)
+        GameTopBar(
+            title = "🎨 颜色识别",
+            level = 0,
+            score = 0,
+            stars = 0,
+            onBack = onBack
+        )
+
+        // 说明文字
         Column(
             modifier = Modifier
-                .fillMaxSize()
+                .fillMaxWidth()
                 .padding(24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                text = "颜色识别游戏",
-                fontSize = 28.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color(0xFF5C6BC0)
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-            Text(
-                text = "训练颜色识别与注意力",
-                fontSize = 14.sp,
-                color = Color(0xFF666666)
+                "看看你的眼睛有多厉害！",
+                fontSize = 16.sp,
+                color = Color(0xFF5D4037),
+                textAlign = TextAlign.Center
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = "根据规则选择正确的颜色",
+                "判断文字颜色还是文字内容？",
                 fontSize = 14.sp,
-                color = Color(0xFF666666)
+                color = Color(0xFF8D6E63),
+                textAlign = TextAlign.Center
             )
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = "规则：判断文字内容 or 字体颜色",
-                fontSize = 12.sp,
-                color = Color(0xFF999999)
-            )
-            Spacer(modifier = Modifier.height(32.dp))
+        }
 
-            // 难度选择
-            val difficulties = listOf(
-                Triple("简单", "红、蓝 · 10题 · 5秒/题", ColorMindGameModule.Difficulty.EASY),
-                Triple("中等", "红、蓝、绿 · 15题 · 4秒/题", ColorMindGameModule.Difficulty.MEDIUM),
-                Triple("困难", "红、蓝、绿、黄 · 20题 · 3秒/题", ColorMindGameModule.Difficulty.HARD),
-                Triple("挑战", "五色 · 25题 · 2.5秒/题", ColorMindGameModule.Difficulty.EXPERT)
-            )
-
-            difficulties.forEachIndexed { _, (label, desc, difficulty) ->
-                Button(
-                    onClick = {
-                        module.setDifficulty(difficulty)
-                        module.start(1)
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(64.dp)
-                        .padding(vertical = 4.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF5C6BC0)),
-                    shape = RoundedCornerShape(16.dp)
-                ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(label, fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                        Text(desc, fontSize = 12.sp)
-                    }
+        // 难度选择卡片
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            DifficultyCard(
+                emoji = "🌟",
+                title = "简单",
+                subtitle = "红、蓝2色 · 10题",
+                color = DifficultyColors.EasyColor,
+                onClick = {
+                    module.setDifficulty(ColorMindGameModule.Difficulty.EASY)
+                    module.start(1)
                 }
-            }
+            )
+
+            DifficultyCard(
+                emoji = "⭐",
+                title = "中等",
+                subtitle = "红、蓝、绿3色 · 15题",
+                color = DifficultyColors.MediumColor,
+                onClick = {
+                    module.setDifficulty(ColorMindGameModule.Difficulty.MEDIUM)
+                    module.start(1)
+                }
+            )
+
+            DifficultyCard(
+                emoji = "🏆",
+                title = "困难",
+                subtitle = "红、蓝、绿、黄4色 · 20题",
+                color = DifficultyColors.HardColor,
+                onClick = {
+                    module.setDifficulty(ColorMindGameModule.Difficulty.HARD)
+                    module.start(1)
+                }
+            )
+
+            DifficultyCard(
+                emoji = "💎",
+                title = "挑战",
+                subtitle = "5种颜色 · 25题",
+                color = DifficultyColors.ExpertColor,
+                onClick = {
+                    module.setDifficulty(ColorMindGameModule.Difficulty.EXPERT)
+                    module.start(1)
+                }
+            )
         }
     }
 }

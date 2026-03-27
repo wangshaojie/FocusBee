@@ -22,6 +22,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.animalgame.ui.components.GameTopBar
+import com.animalgame.ui.components.DifficultyCard
+import com.animalgame.ui.components.DifficultyColors
 import kotlinx.coroutines.delay
 
 class SchulteComposeActivity : AppCompatActivity() {
@@ -146,52 +148,85 @@ private fun LevelSelectContent(
         modifier = Modifier.fillMaxSize()
     ) {
         GameTopBar(
-            title = "舒尔特训练",
+            title = "🔢 舒尔特训练",
             level = 0,
             score = 0,
             stars = 0,
             onBack = onBack
         )
 
+        // 说明文字
         Column(
             modifier = Modifier
-                .fillMaxSize()
+                .fillMaxWidth()
                 .padding(24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text("舒尔特训练游戏", fontSize = 28.sp, fontWeight = FontWeight.Bold, color = Color(0xFF5C6BC0))
-            Spacer(modifier = Modifier.height(16.dp))
-            Text("在网格中按顺序点击数字，训练专注力", fontSize = 14.sp, color = Color(0xFF666666))
-            Spacer(modifier = Modifier.height(32.dp))
+            Text(
+                "在网格中按顺序点击数字！",
+                fontSize = 16.sp,
+                color = Color(0xFF5D4037),
+                textAlign = TextAlign.Center
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                "训练你的专注力和观察力",
+                fontSize = 14.sp,
+                color = Color(0xFF8D6E63),
+                textAlign = TextAlign.Center
+            )
+        }
 
-            // 难度选择按钮
-            val difficulties = listOf(
-                Triple("简单", "3×3", SchulteGameModule.Difficulty.EASY),
-                Triple("中等", "4×4", SchulteGameModule.Difficulty.MEDIUM),
-                Triple("困难", "5×5", SchulteGameModule.Difficulty.HARD),
-                Triple("挑战", "6×6", SchulteGameModule.Difficulty.EXPERT)
+        // 难度选择卡片
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            DifficultyCard(
+                emoji = "🌟",
+                title = "简单",
+                subtitle = "3×3网格 · 50关",
+                color = DifficultyColors.EasyColor,
+                onClick = {
+                    module.setDifficulty(SchulteGameModule.Difficulty.EASY)
+                    module.start(1)
+                }
             )
 
-            difficulties.forEachIndexed { index, (label, grid, difficulty) ->
-                Button(
-                    onClick = {
-                        module.setDifficulty(difficulty)
-                        module.start(1)
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(64.dp)
-                        .padding(vertical = 4.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50)),
-                    shape = RoundedCornerShape(16.dp)
-                ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text("$label · $grid", fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                        Text("50关", fontSize = 12.sp)
-                    }
+            DifficultyCard(
+                emoji = "⭐",
+                title = "中等",
+                subtitle = "4×4网格 · 50关",
+                color = DifficultyColors.MediumColor,
+                onClick = {
+                    module.setDifficulty(SchulteGameModule.Difficulty.MEDIUM)
+                    module.start(1)
                 }
-            }
+            )
+
+            DifficultyCard(
+                emoji = "🏆",
+                title = "困难",
+                subtitle = "5×5网格 · 50关",
+                color = DifficultyColors.HardColor,
+                onClick = {
+                    module.setDifficulty(SchulteGameModule.Difficulty.HARD)
+                    module.start(1)
+                }
+            )
+
+            DifficultyCard(
+                emoji = "💎",
+                title = "挑战",
+                subtitle = "6×6网格 · 50关",
+                color = DifficultyColors.ExpertColor,
+                onClick = {
+                    module.setDifficulty(SchulteGameModule.Difficulty.EXPERT)
+                    module.start(1)
+                }
+            )
         }
     }
 }

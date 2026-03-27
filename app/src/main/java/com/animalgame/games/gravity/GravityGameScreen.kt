@@ -14,6 +14,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -21,6 +22,8 @@ import com.animalgame.core.game.GameAction
 import com.animalgame.core.game.GameModule
 import com.animalgame.core.game.GameState
 import com.animalgame.ui.components.GameTopBar
+import com.animalgame.ui.components.DifficultyCard
+import com.animalgame.ui.components.DifficultyColors
 import com.animalgame.core.game.AbstractGameModule
 
 /**
@@ -134,74 +137,97 @@ fun GravityGameScreen(
 }
 
 /**
- * 关卡选择屏幕
+ * 关卡选择屏幕 - 卡通风格
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun LevelSelectScreen(
     module: GravityGameModule,
     onBack: () -> Unit
 ) {
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color(0xFFF8F6FF))
+        modifier = Modifier.fillMaxSize()
     ) {
-        GameTopBar(title = "平衡小球", level = 0, score = 0, stars = 0, onBack = onBack)
+        GameTopBar(
+            title = "🎯 平衡小球",
+            level = 0,
+            score = 0,
+            stars = 0,
+            onBack = onBack
+        )
 
+        // 说明文字
         Column(
             modifier = Modifier
-                .fillMaxSize()
+                .fillMaxWidth()
                 .padding(24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                text = "平衡小球游戏",
-                fontSize = 28.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color(0xFF5C6BC0)
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-            Text(
-                text = "倾斜手机控制小球到达终点",
-                fontSize = 14.sp,
-                color = Color(0xFF666666)
+                "倾斜手机，控制小球到达终点！",
+                fontSize = 16.sp,
+                color = Color(0xFF5D4037),
+                textAlign = TextAlign.Center
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = "不能碰到墙壁",
-                fontSize = 12.sp,
-                color = Color(0xFF999999)
+                "小心不要碰到墙壁哦",
+                fontSize = 14.sp,
+                color = Color(0xFF8D6E63),
+                textAlign = TextAlign.Center
             )
-            Spacer(modifier = Modifier.height(32.dp))
+        }
 
-            // 难度选择
-            val difficulties = listOf(
-                Triple("简单", "3次容错 · 25秒", Difficulty.EASY),
-                Triple("中等", "2次容错 · 20秒", Difficulty.MEDIUM),
-                Triple("困难", "1次容错 · 15秒", Difficulty.HARD),
-                Triple("挑战", "0次容错 · 12秒", Difficulty.EXPERT)
-            )
-
-            difficulties.forEachIndexed { _, (label, desc, difficulty) ->
-                Button(
-                    onClick = {
-                        module.setDifficulty(difficulty)
-                        module.start(1)
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(64.dp)
-                        .padding(vertical = 4.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF5C6BC0)),
-                    shape = RoundedCornerShape(16.dp)
-                ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(label, fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                        Text(desc, fontSize = 12.sp)
-                    }
+        // 难度选择卡片
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            DifficultyCard(
+                emoji = "🌟",
+                title = "简单",
+                subtitle = "3次容错 · 25秒 · 10关",
+                color = DifficultyColors.EasyColor,
+                onClick = {
+                    module.setDifficulty(Difficulty.EASY)
+                    module.start(1)
                 }
-            }
+            )
+
+            DifficultyCard(
+                emoji = "⭐",
+                title = "中等",
+                subtitle = "2次容错 · 20秒 · 10关",
+                color = DifficultyColors.MediumColor,
+                onClick = {
+                    module.setDifficulty(Difficulty.MEDIUM)
+                    module.start(1)
+                }
+            )
+
+            DifficultyCard(
+                emoji = "🏆",
+                title = "困难",
+                subtitle = "1次容错 · 15秒 · 10关",
+                color = DifficultyColors.HardColor,
+                onClick = {
+                    module.setDifficulty(Difficulty.HARD)
+                    module.start(1)
+                }
+            )
+
+            DifficultyCard(
+                emoji = "💎",
+                title = "挑战",
+                subtitle = "0次容错 · 12秒 · 10关",
+                color = DifficultyColors.ExpertColor,
+                onClick = {
+                    module.setDifficulty(Difficulty.EXPERT)
+                    module.start(1)
+                }
+            )
         }
     }
 }

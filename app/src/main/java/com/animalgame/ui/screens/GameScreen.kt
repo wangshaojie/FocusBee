@@ -23,6 +23,8 @@ import com.animalgame.games.memory.MemoryGameUI
 import com.animalgame.games.schulte.SchulteGameScreen
 import com.animalgame.games.gravity.GravityGameModule
 import com.animalgame.games.gravity.GravityGameScreen
+import com.animalgame.games.slide.SlideGameModule
+import com.animalgame.games.slide.SlideGameScreen
 import kotlinx.coroutines.flow.collectLatest
 
 // 游戏页面配色
@@ -149,6 +151,35 @@ fun GameScreen(
 
             // 使用 Gravity UI
             GravityGameScreen(
+                module = module,
+                onBack = onBack
+            )
+        }
+        "slide" -> {
+            // 方块推推乐游戏
+            val scoreManager = remember { ScoreManager.getInstance(context) }
+            val module = remember { SlideGameModule() }
+
+            // 收集结果并保存
+            LaunchedEffect(Unit) {
+                module.result.collectLatest { result ->
+                    result?.let {
+                        val modelResult = GameResult(
+                            gameId = it.gameId,
+                            level = it.level,
+                            score = it.score,
+                            stars = it.stars,
+                            isCompleted = it.isSuccess,
+                            timeMillis = it.timeMillis,
+                            mistakes = it.mistakes
+                        )
+                        scoreManager.reportResult(modelResult)
+                    }
+                }
+            }
+
+            // 使用 Slide UI
+            SlideGameScreen(
                 module = module,
                 onBack = onBack
             )
