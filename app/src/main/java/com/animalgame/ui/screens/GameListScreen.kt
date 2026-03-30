@@ -205,6 +205,8 @@ private fun getGameEmoji(gameName: String): String {
         "颜色识别" -> "🎨"
         "平衡小球" -> "🎯"
         "方块推推乐" -> "🔲"
+        "镜像绘图" -> "✏️"
+        "灯塔路径" -> "🏠"
         else -> "🎮"
     }
 }
