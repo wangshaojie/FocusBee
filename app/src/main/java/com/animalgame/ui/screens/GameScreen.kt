@@ -244,6 +244,35 @@ fun GameScreen(
                 onBack = onBack
             )
         }
+        "sum_match" -> {
+            // 数字连连看游戏
+            val scoreManager = remember { ScoreManager.getInstance(context) }
+            val module = remember { com.animalgame.games.summatch.SumMatchGameModule() }
+
+            // 收集结果并保存
+            LaunchedEffect(Unit) {
+                module.result.collectLatest { result ->
+                    result?.let {
+                        val modelResult = GameResult(
+                            gameId = it.gameId,
+                            level = it.level,
+                            score = it.score,
+                            stars = it.stars,
+                            isCompleted = it.isSuccess,
+                            timeMillis = it.timeMillis,
+                            mistakes = it.mistakes
+                        )
+                        scoreManager.reportResult(modelResult)
+                    }
+                }
+            }
+
+            // 使用 Sum Match UI
+            com.animalgame.games.summatch.SumMatchGameScreen(
+                module = module,
+                onBack = onBack
+            )
+        }
         else -> {
             // 未知游戏
             Box(

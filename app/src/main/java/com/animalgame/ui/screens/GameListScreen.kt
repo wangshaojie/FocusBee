@@ -207,6 +207,7 @@ private fun getGameEmoji(gameName: String): String {
         "方块推推乐" -> "🔲"
         "镜像绘图" -> "✏️"
         "灯塔路径" -> "🏠"
+        "数字连连看" -> "🔢"
         else -> "🎮"
     }
 }

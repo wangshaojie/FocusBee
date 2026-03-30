@@ -14,6 +14,7 @@ import com.animalgame.games.slide.registerSlideGame
 import com.animalgame.games.colorburst.registerColorBurstGame
 import com.animalgame.games.mirrordraw.registerMirrorDrawGame
 import com.animalgame.games.lighthouse.registerLighthousePathGame
+import com.animalgame.games.summatch.registerSumMatchGame
 import kotlinx.coroutines.launch
 
 class HomeActivity : AppCompatActivity() {
@@ -70,6 +71,7 @@ class HomeActivity : AppCompatActivity() {
         registerColorBurstGame()
         registerMirrorDrawGame()
         registerLighthousePathGame()
+        registerSumMatchGame()
     }
 
     override fun onResume() {
