@@ -61,6 +61,7 @@ class LighthousePathGameModule : AbstractGameModule() {
     private var sequenceIndex = 0                   // 当前播放到序列第几个
     private var showSequenceComplete = false        // 序列播放是否完成
     private var wrongCellIndex = -1                 // 错误的格子索引
+    private var sequenceJob: kotlinx.coroutines.Job? = null  // 序列播放协程
 
     // 调试模式
     private val DEBUG = true
@@ -151,7 +152,8 @@ class LighthousePathGameModule : AbstractGameModule() {
         val config = getLevelConfig(currentLevel)
         currentPhase = GamePhase.SHOWING_SEQUENCE
 
-        gameScope.launch {
+        sequenceJob?.cancel()
+        sequenceJob = gameScope.launch {
             // 等待一小段时间让玩家准备
             delay(500)
 
@@ -358,6 +360,8 @@ class LighthousePathGameModule : AbstractGameModule() {
 
     fun resetToIdle() {
         stopTimer()
+        sequenceJob?.cancel()
+        sequenceJob = null
         _state.value = GameState.Idle
     }
 

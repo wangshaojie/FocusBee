@@ -45,7 +45,7 @@ fun MirrorDrawGameScreen(
     val handleBack: () -> Unit = {
         when (gameState) {
             is GameState.Idle -> onBack()
-            else -> mirrorDrawModule?.resetToIdle() ?: module.onUserAction(GameAction.Quit)
+            else -> mirrorDrawModule?.resetToIdle()
         }
     }
 

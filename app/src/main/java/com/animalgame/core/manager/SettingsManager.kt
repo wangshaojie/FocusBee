@@ -6,6 +6,7 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.floatPreferencesKey
+import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.animalgame.core.model.GameSettings
@@ -30,6 +31,7 @@ object SettingsManager {
     private val KEY_LANGUAGE = stringPreferencesKey("language")
     private val KEY_DEFAULT_DIFFICULTY = stringPreferencesKey("default_difficulty")
     private val KEY_ICON_THEME = stringPreferencesKey("icon_theme")
+    private val KEY_DARK_MODE = intPreferencesKey("dark_mode") // 0=跟随系统, 1=浅色, 2=深色
 
     @Volatile
     private var dataStore: DataStore<Preferences>? = null
@@ -51,7 +53,8 @@ object SettingsManager {
                 vibrationEnabled = preferences[KEY_VIBRATION_ENABLED] ?: GameSettings.DEFAULT.vibrationEnabled,
                 language = preferences[KEY_LANGUAGE] ?: GameSettings.DEFAULT.language,
                 defaultDifficulty = preferences[KEY_DEFAULT_DIFFICULTY] ?: GameSettings.DEFAULT.defaultDifficulty,
-                iconTheme = preferences[KEY_ICON_THEME] ?: GameSettings.DEFAULT.iconTheme
+                iconTheme = preferences[KEY_ICON_THEME] ?: GameSettings.DEFAULT.iconTheme,
+                darkModeEnabled = (preferences[KEY_DARK_MODE] ?: 0) == 2
             )
         }
     }
@@ -124,6 +127,16 @@ object SettingsManager {
     }
 
     /**
+     * 更新深色模式
+     * @param mode 0=跟随系统, 1=浅色, 2=深色
+     */
+    suspend fun updateDarkMode(context: Context, mode: Int) {
+        getDataStore(context).edit { preferences ->
+            preferences[KEY_DARK_MODE] = mode.coerceIn(0, 2)
+        }
+    }
+
+    /**
      * 批量更新设置
      */
     suspend fun updateSettings(context: Context, settings: GameSettings) {
@@ -134,6 +147,7 @@ object SettingsManager {
             preferences[KEY_LANGUAGE] = settings.language
             preferences[KEY_DEFAULT_DIFFICULTY] = settings.defaultDifficulty
             preferences[KEY_ICON_THEME] = settings.iconTheme
+            preferences[KEY_DARK_MODE] = if (settings.darkModeEnabled) 2 else 0
         }
     }
 

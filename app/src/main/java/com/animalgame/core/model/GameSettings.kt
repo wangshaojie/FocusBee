@@ -10,7 +10,8 @@ data class GameSettings(
     // 预留扩展字段
     val language: String = "zh",        // 语言设置
     val defaultDifficulty: String = "EASY", // 默认难度
-    val iconTheme: String = "default"   // 图标主题
+    val iconTheme: String = "default",   // 图标主题
+    val darkModeEnabled: Boolean = false  // 深色模式（跟随系统）
 ) {
     companion object {
         // 默认设置

@@ -3,19 +3,23 @@ package com.animalgame.games.schulte
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -47,97 +51,219 @@ fun SchulteGameScreen(
 ) {
     val gameState by module.state.collectAsState()
 
-    // 处理返回逻辑：根据当前状态决定返回行为
-    // Playing/Completed 状态返回到 Idle（关卡选择）
-    // Idle 状态直接退出
     val handleBack: () -> Unit = {
         when (gameState) {
             is com.animalgame.core.game.GameState.Idle -> {
-                // 在关卡选择页面，直接退出
                 onBack()
             }
             else -> {
-                // 在游戏进行中或完成页面，返回到关卡选择
                 module.resetToIdle()
             }
         }
     }
 
-    Column(
+    // 彩虹太空主题背景
+    Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFF8F6FF))
+            .background(
+                Brush.verticalGradient(
+                    colors = listOf(
+                        Color(0xFF1A237E),  // 深蓝（太空）
+                        Color(0xFF3949AB),  // 靛蓝
+                        Color(0xFF5C6BC0),  // 紫蓝
+                        Color(0xFF7986CB),  // 浅紫蓝
+                        Color(0xFF9FA8DA),  // 更浅
+                    )
+                )
+            )
     ) {
-        when (val state = gameState) {
-            is com.animalgame.core.game.GameState.Idle -> {
-                // 关卡选择 - 传递 module 引用
-                LevelSelectContent(
-                    module = module,
-                    onBack = handleBack
-                )
-            }
+        // 装饰性星星和火箭
+        DecoratedSpace()
 
-            is com.animalgame.core.game.GameState.Playing -> {
-                // 游戏进行中
-                val numbers = (state.data["numbers"] as? List<Int>) ?: emptyList()
-                val currentNumber = state.data["currentNumber"] as? Int ?: 1
-                val mistakes = state.data["mistakes"] as? Int ?: 0
-                val clickedNumbersRaw = state.data["clickedNumbers"] as? Map<*, *> ?: emptyMap<Any, Boolean>()
-                val clickedNumbers: Map<Int, Boolean> = clickedNumbersRaw.mapKeys { it.key as? Int }.mapValues { it.value as? Boolean }.filterKeys { it != null } as Map<Int, Boolean>
-                val wrongNumber = state.data["wrongNumber"] as? Int ?: -1
-                val difficultyName = state.data["difficulty"] as? String
-                val levelInDifficulty = state.data["levelInDifficulty"] as? Int ?: 1
+        Column(
+            modifier = Modifier.fillMaxSize()
+        ) {
+            when (val state = gameState) {
+                is com.animalgame.core.game.GameState.Idle -> {
+                    LevelSelectContent(
+                        module = module,
+                        onBack = handleBack
+                    )
+                }
 
-                PlayingContent(
-                    numbers = numbers,
-                    currentNumber = currentNumber,
-                    mistakes = mistakes,
-                    clickedNumbers = clickedNumbers,
-                    wrongNumber = wrongNumber,
-                    level = levelInDifficulty,
-                    difficultyName = difficultyName,
-                    score = state.score,
-                    onNumberClick = { number ->
-                        module.onUserAction(com.animalgame.core.game.GameAction.TapIndex(number - 1))
-                    },
-                    onBack = handleBack,
-                    onRestart = {
-                        module.restartCurrentLevel()
-                    }
-                )
-            }
+                is com.animalgame.core.game.GameState.Playing -> {
+                    val numbers = (state.data["numbers"] as? List<Int>) ?: emptyList()
+                    val currentNumber = state.data["currentNumber"] as? Int ?: 1
+                    val mistakes = state.data["mistakes"] as? Int ?: 0
+                    val clickedNumbersRaw = state.data["clickedNumbers"] as? Map<*, *> ?: emptyMap<Any, Boolean>()
+                    val clickedNumbers: Map<Int, Boolean> = clickedNumbersRaw.mapKeys { it.key as? Int }.mapValues { it.value as? Boolean }.filterKeys { it != null } as Map<Int, Boolean>
+                    val wrongNumber = state.data["wrongNumber"] as? Int ?: -1
+                    val difficultyName = state.data["difficulty"] as? String
+                    val levelInDifficulty = state.data["levelInDifficulty"] as? Int ?: 1
 
-            is com.animalgame.core.game.GameState.Completed -> {
-                // 游戏完成 - 从 module 获取当前难度信息
-                val difficultyName = module.getCurrentDifficultyName()
-                val levelInDifficulty = module.getCurrentLevelIndex()
-                val isLastInDifficulty = module.isDifficultyCompleted()
+                    PlayingContent(
+                        numbers = numbers,
+                        currentNumber = currentNumber,
+                        mistakes = mistakes,
+                        clickedNumbers = clickedNumbers,
+                        wrongNumber = wrongNumber,
+                        level = levelInDifficulty,
+                        difficultyName = difficultyName,
+                        score = state.score,
+                        onNumberClick = { number ->
+                            module.onUserAction(com.animalgame.core.game.GameAction.TapIndex(number - 1))
+                        },
+                        onBack = handleBack,
+                        onRestart = {
+                            module.restartCurrentLevel()
+                        }
+                    )
+                }
 
-                CompletedContent(
-                    state = state,
-                    difficultyName = difficultyName,
-                    levelInDifficulty = levelInDifficulty,
-                    isLastInDifficulty = isLastInDifficulty,
-                    onNextLevel = {
-                        module.nextLevel()
-                    },
-                    onReplay = {
-                        module.restartCurrentLevel()
-                    },
-                    onBack = handleBack
-                )
-            }
+                is com.animalgame.core.game.GameState.Completed -> {
+                    val difficultyName = module.getCurrentDifficultyName()
+                    val levelInDifficulty = module.getCurrentLevelIndex()
+                    val isLastInDifficulty = module.isDifficultyCompleted()
 
-            else -> {
-                // 其他状态，显示关卡选择
-                LevelSelectContent(
-                    module = module,
-                    onBack = handleBack
-                )
+                    CompletedContent(
+                        state = state,
+                        difficultyName = difficultyName,
+                        levelInDifficulty = levelInDifficulty,
+                        isLastInDifficulty = isLastInDifficulty,
+                        onNextLevel = {
+                            module.nextLevel()
+                        },
+                        onReplay = {
+                            module.restartCurrentLevel()
+                        },
+                        onBack = handleBack
+                    )
+                }
+
+                else -> {
+                    LevelSelectContent(
+                        module = module,
+                        onBack = handleBack
+                    )
+                }
             }
         }
     }
 }
+
+// ==================== 装饰性太空元素 ====================
+
+@Composable
+private fun DecoratedSpace() {
+    val infiniteTransition = rememberInfiniteTransition(label = "space")
+    val star1Float by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 10f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(2000),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "star1"
+    )
+    val star2Float by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 15f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1500),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "star2"
+    )
+    val star3Float by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 12f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(2500),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "star3"
+    )
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        // 星星们
+        Text(
+            text = "⭐",
+            fontSize = 25.sp,
+            modifier = Modifier
+                .align(Alignment.TopStart)
+                .offset(x = 30.dp, y = 100.dp + star1Float.dp)
+        )
+        Text(
+            text = "⭐",
+            fontSize = 20.sp,
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .offset(x = (-60).dp, y = 150.dp - star2Float.dp)
+        )
+        Text(
+            text = "✨",
+            fontSize = 30.sp,
+            modifier = Modifier
+                .align(Alignment.TopStart)
+                .offset(x = 100.dp, y = 200.dp + star3Float.dp)
+        )
+        Text(
+            text = "⭐",
+            fontSize = 18.sp,
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .offset(x = (-30).dp, y = 250.dp + star1Float.dp)
+        )
+        Text(
+            text = "✨",
+            fontSize = 22.sp,
+            modifier = Modifier
+                .align(Alignment.TopStart)
+                .offset(x = 180.dp, y = 120.dp - star2Float.dp)
+        )
+
+        // 火箭
+        Text(
+            text = "🚀",
+            fontSize = 50.sp,
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .offset(x = (-20).dp, y = 80.dp)
+        )
+
+        // 月亮
+        Text(
+            text = "🌙",
+            fontSize = 45.sp,
+            modifier = Modifier
+                .align(Alignment.TopStart)
+                .offset(x = 40.dp, y = 60.dp)
+        )
+
+        // 数字装饰
+        Text(
+            text = "123",
+            fontSize = 24.sp,
+            color = Color.White.copy(alpha = 0.3f),
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier
+                .align(Alignment.BottomStart)
+                .offset(x = 20.dp, y = (-80).dp + star3Float.dp)
+        )
+        Text(
+            text = "456",
+            fontSize = 24.sp,
+            color = Color.White.copy(alpha = 0.3f),
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .offset(x = (-40).dp, y = (-60).dp + star1Float.dp)
+        )
+    }
+}
+
+// ==================== 关卡选择 ====================
 
 @Composable
 private fun LevelSelectContent(
@@ -163,16 +289,17 @@ private fun LevelSelectContent(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                "在网格中按顺序点击数字！",
-                fontSize = 16.sp,
-                color = Color(0xFF5D4037),
-                textAlign = TextAlign.Center
+                "🚀 按顺序点击数字！",
+                fontSize = 24.sp,
+                color = Color.White,
+                textAlign = TextAlign.Center,
+                fontWeight = FontWeight.Bold
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                "训练你的专注力和观察力",
-                fontSize = 14.sp,
-                color = Color(0xFF8D6E63),
+                "训练你的专注力成为学霸！📚",
+                fontSize = 16.sp,
+                color = Color(0xFFB3E5FC),
                 textAlign = TextAlign.Center
             )
         }
@@ -231,6 +358,8 @@ private fun LevelSelectContent(
     }
 }
 
+// ==================== 游戏进行中 ====================
+
 @Composable
 private fun PlayingContent(
     numbers: List<Int>,
@@ -245,19 +374,16 @@ private fun PlayingContent(
     onBack: () -> Unit,
     onRestart: () -> Unit
 ) {
-    // 存储本地错误数字状态，用于 1 秒后自动清除红色
     var localWrongNumber by remember { mutableIntStateOf(wrongNumber) }
 
-    // 监听 wrongNumber 变化，自动清除红色
     LaunchedEffect(wrongNumber) {
         if (wrongNumber > 0) {
             localWrongNumber = wrongNumber
-            delay(1000)  // 1秒后清除红色
+            delay(800)
             localWrongNumber = -1
         }
     }
 
-    // 计算网格大小 - 根据难度名称
     val gridSize = when (difficultyName) {
         "简单" -> 3
         "中等" -> 4
@@ -266,8 +392,18 @@ private fun PlayingContent(
         else -> 3
     }
 
-    // 获取正确的关卡号用于显示
     val displayLevel = level
+
+    // 显示提示状态（点击后显示答案）
+    var showHint by remember { mutableStateOf(false) }
+
+    // 点击显示提示，3秒后自动隐藏
+    LaunchedEffect(showHint) {
+        if (showHint) {
+            delay(3000)
+            showHint = false
+        }
+    }
 
     Column(
         modifier = Modifier.fillMaxSize()
@@ -286,39 +422,91 @@ private fun PlayingContent(
             onBack = onBack
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(12.dp))
 
-        // 当前数字提示
+        // 儿童友好当前数字提示
         Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 24.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White),
-            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-            shape = RoundedCornerShape(16.dp)
+                .padding(horizontal = 20.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = Color.White.copy(alpha = 0.95f)
+            ),
+            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+            shape = RoundedCornerShape(24.dp)
         ) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
+                horizontalArrangement = Arrangement.SpaceEvenly,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = "当前: $currentNumber",
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFF5C6BC0)
+                // 当前要点击的数字（点击显示，3秒后隐藏）
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.clickable { showHint = !showHint }
+                ) {
+                    Text(
+                        text = if (showHint) "👆 答案！" else "👆 点击显示",
+                        fontSize = 14.sp,
+                        color = if (showHint) Color(0xFFFF6F00) else Color(0xFF5C6BC0)
+                    )
+                    Text(
+                        text = if (showHint) currentNumber.toString() else "?",
+                        fontSize = 48.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = if (showHint) Color(0xFFFF6F00) else Color(0xFFBDBDBD)
+                    )
+                }
+
+                // 分割线
+                Box(
+                    modifier = Modifier
+                        .width(2.dp)
+                        .height(50.dp)
+                        .background(Color(0xFFE0E0E0))
                 )
-                Text(
-                    text = "错误: $mistakes",
-                    fontSize = 16.sp,
-                    color = if (mistakes > 0) Color(0xFFE53935) else Color(0xFF4CAF50)
-                )
+
+                // 错误次数
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = if (mistakes == 0) "✅ 无错误" else "❌ 错误",
+                        fontSize = 14.sp,
+                        color = if (mistakes > 0) Color(0xFFE53935) else Color(0xFF4CAF50)
+                    )
+                    Text(
+                        text = mistakes.toString(),
+                        fontSize = 36.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = if (mistakes > 0) Color(0xFFE53935) else Color(0xFF4CAF50)
+                    )
+                }
+
+                // 已完成
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "⭐ 完成",
+                        fontSize = 14.sp,
+                        color = Color(0xFFFFB300)
+                    )
+                    val completedCount = clickedNumbers.size
+                    val totalCount = numbers.size
+                    Text(
+                        text = "$completedCount/$totalCount",
+                        fontSize = 36.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFFFFB300)
+                    )
+                }
             }
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(12.dp))
 
         // 数字网格
         Box(
@@ -330,11 +518,13 @@ private fun PlayingContent(
         ) {
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = Color(0xFFEDE7F6)),
-                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
-                shape = RoundedCornerShape(20.dp)
+                colors = CardDefaults.cardColors(
+                    containerColor = Color(0xFFE8EAF6).copy(alpha = 0.9f)
+                ),
+                elevation = CardDefaults.cardElevation(defaultElevation = 12.dp),
+                shape = RoundedCornerShape(24.dp)
             ) {
-                    if (numbers.isNotEmpty()) {
+                if (numbers.isNotEmpty()) {
                     LazyVerticalGrid(
                         columns = GridCells.Fixed(gridSize),
                         modifier = Modifier
@@ -346,10 +536,11 @@ private fun PlayingContent(
                         itemsIndexed(numbers) { _, number ->
                             val isCorrect = clickedNumbers[number] == true
                             val isWrong = number == localWrongNumber
-                            NumberCell(
+                            KidFriendlyNumberCell(
                                 number = number,
                                 isCorrect = isCorrect,
                                 isWrong = isWrong,
+                                isNextNumber = number == currentNumber,
                                 onClick = { onNumberClick(number) }
                             )
                         }
@@ -358,69 +549,147 @@ private fun PlayingContent(
             }
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(12.dp))
 
         // 重置按钮
-        OutlinedButton(
+        Button(
             onClick = onRestart,
             modifier = Modifier
                 .fillMaxWidth()
-                .height(44.dp)
+                .height(56.dp)
                 .padding(horizontal = 24.dp),
-            colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF5C6BC0)),
-            border = ButtonDefaults.outlinedButtonBorder.copy(
-                brush = androidx.compose.ui.graphics.SolidColor(Color(0xFF5C6BC0).copy(alpha = 0.5f))
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color(0xFFFF7043)
             ),
-            shape = RoundedCornerShape(16.dp)
+            shape = RoundedCornerShape(20.dp),
+            elevation = ButtonDefaults.buttonElevation(defaultElevation = 8.dp)
         ) {
-            Text("重置本关", fontSize = 16.sp)
+            Text("🔄 重新开始", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White)
         }
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(20.dp))
     }
 }
 
+// ==================== 儿童友好数字格子 ====================
+
 @Composable
-private fun NumberCell(
+private fun KidFriendlyNumberCell(
     number: Int,
     isCorrect: Boolean,
     isWrong: Boolean,
+    isNextNumber: Boolean,
     onClick: () -> Unit
 ) {
-    // 默认：白色背景 + 紫色文字
-    // 正确点击后：绿色背景 + 白色文字 + 更高阴影
-    // 错误点击（1秒内）：红色背景 + 白色文字
-    val backgroundColor = when {
-        isWrong -> Color(0xFFE53935)  // 红色 - 错误
-        isCorrect -> Color(0xFF4CAF50)  // 绿色 - 正确
-        else -> Color.White  // 默认白色
+    // 点击动画
+    val scale by animateFloatAsState(
+        targetValue = when {
+            isWrong -> 1.15f
+            isCorrect -> 0.95f
+            else -> 1f
+        },
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessLow
+        ),
+        label = "cellScale"
+    )
+
+    // 错误抖动
+    val shakeOffset by animateFloatAsState(
+        targetValue = if (isWrong) 8f else 0f,
+        animationSpec = keyframes {
+            durationMillis = 300
+            0f at 0
+            -8f at 75
+            8f at 150
+            -8f at 225
+            0f at 300
+        },
+        label = "shake"
+    )
+
+    val backgroundColor by animateColorAsState(
+        targetValue = when {
+            isWrong -> Color(0xFFFF5252)
+            isCorrect -> Color(0xFF69F0AE)
+            isNextNumber -> Color(0xFFFFE082)
+            else -> Color.White
+        },
+        animationSpec = tween(200),
+        label = "bgColor"
+    )
+
+    val textColor = when {
+        isWrong -> Color.White
+        isCorrect -> Color.White
+        isNextNumber -> Color(0xFFFF6F00)
+        else -> Color(0xFF5C6BC0)
     }
-    val textColor = if (isCorrect || isWrong) Color.White else Color(0xFF5C6BC0)
-    val elevation = if (isCorrect) 8.dp else 4.dp
+
+    val fontSize = when {
+        number >= 100 -> 32.sp
+        number >= 10 -> 38.sp
+        else -> 42.sp
+    }
 
     Card(
         modifier = Modifier
             .aspectRatio(1f)
-            .fillMaxWidth(0.8f)
+            .fillMaxWidth(0.85f)
+            .offset(x = shakeOffset.dp)
+            .scale(scale)
+            .shadow(
+                elevation = if (isCorrect || isNextNumber) 12.dp else 6.dp,
+                shape = RoundedCornerShape(16.dp),
+                spotColor = when {
+                    isCorrect -> Color(0xFF69F0AE)
+                    isNextNumber -> Color(0xFFFFD54F)
+                    else -> Color(0xFF5C6BC0)
+                }
+            )
+            .clip(RoundedCornerShape(16.dp))
+            .background(backgroundColor)
             .clickable(onClick = onClick),
-        colors = CardDefaults.cardColors(containerColor = backgroundColor),
-        elevation = CardDefaults.cardElevation(defaultElevation = elevation),
-        shape = RoundedCornerShape(12.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+        shape = RoundedCornerShape(16.dp)
     ) {
         Box(
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center
         ) {
-            Text(
-                text = number.toString(),
-                fontSize = 48.sp,
-                fontWeight = FontWeight.Bold,
-                color = textColor,
-                textAlign = TextAlign.Center
-            )
+            when {
+                isCorrect -> {
+                    Text(
+                        text = "✓",
+                        fontSize = fontSize,
+                        fontWeight = FontWeight.Bold,
+                        color = textColor
+                    )
+                }
+                isWrong -> {
+                    Text(
+                        text = "✗",
+                        fontSize = fontSize,
+                        fontWeight = FontWeight.Bold,
+                        color = textColor
+                    )
+                }
+                else -> {
+                    Text(
+                        text = number.toString(),
+                        fontSize = fontSize,
+                        fontWeight = FontWeight.Bold,
+                        color = textColor,
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
         }
     }
 }
+
+// ==================== 完成页面 ====================
 
 @Composable
 private fun CompletedContent(
@@ -432,6 +701,15 @@ private fun CompletedContent(
     onReplay: () -> Unit,
     onBack: () -> Unit
 ) {
+    val successScale by animateFloatAsState(
+        targetValue = 1f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessLow
+        ),
+        label = "successScale"
+    )
+
     Column(
         modifier = Modifier.fillMaxSize()
     ) {
@@ -451,52 +729,120 @@ private fun CompletedContent(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            Text("恭喜过关！", fontSize = 32.sp, fontWeight = FontWeight.Bold, color = Color(0xFF4CAF50))
+            // 成功大表情
+            Text(
+                text = "🎉",
+                fontSize = 100.sp,
+                modifier = Modifier.scale(successScale)
+            )
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // 星星显示
+            Text(
+                text = "太棒了！🎊",
+                fontSize = 36.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF69F0AE)
+            )
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // 星星
             Row {
                 repeat(3) { index ->
+                    val starScale by animateFloatAsState(
+                        targetValue = if (index < state.stars) 1.3f else 1f,
+                        animationSpec = tween(300, delayMillis = index * 150),
+                        label = "star$index"
+                    )
                     Text(
                         text = if (index < state.stars) "⭐" else "☆",
-                        fontSize = 36.sp
+                        fontSize = 50.sp,
+                        modifier = Modifier.scale(starScale)
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-            Text("得分: ${state.score}", fontSize = 18.sp)
-            Text("用时: ${state.timeMillis / 1000}s", fontSize = 16.sp, color = Color(0xFF666666))
+            Text(
+                "得分: ${state.score}",
+                fontSize = 24.sp,
+                color = Color.White,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                "用时: ${state.timeMillis / 1000}秒",
+                fontSize = 18.sp,
+                color = Color(0xFFB3E5FC)
+            )
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(32.dp))
 
-            // 下一关按钮 - 只在当前难度未完成时显示
+            // 下一关按钮
             if (!isLastInDifficulty) {
                 Button(
                     onClick = onNextLevel,
-                    modifier = Modifier.fillMaxWidth().height(56.dp)
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(60.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF4CAF50)
+                    ),
+                    shape = RoundedCornerShape(20.dp),
+                    elevation = ButtonDefaults.buttonElevation(defaultElevation = 8.dp)
                 ) {
-                    Text("下一关", fontSize = 18.sp)
+                    Text("下一关 ➡️", fontSize = 20.sp, fontWeight = FontWeight.Bold)
                 }
                 Spacer(modifier = Modifier.height(12.dp))
             } else {
-                // 当前难度已完成，提示用户
-                Text(
-                    text = "🎉 ${difficultyName}难度已全部通关！",
-                    fontSize = 16.sp,
-                    color = Color(0xFF4CAF50),
-                    fontWeight = FontWeight.Medium
-                )
-                Spacer(modifier = Modifier.height(16.dp))
+                Card(
+                    colors = CardDefaults.cardColors(
+                        containerColor = Color(0xFFFFB300).copy(alpha = 0.3f)
+                    ),
+                    shape = RoundedCornerShape(16.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(text = "🎉", fontSize = 24.sp)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "${difficultyName}难度已全部通关！",
+                            fontSize = 16.sp,
+                            color = Color(0xFFFFB300),
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.height(12.dp))
             }
 
             Button(
                 onClick = onReplay,
-                modifier = Modifier.fillMaxWidth().height(56.dp)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(60.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFFFF7043)
+                ),
+                shape = RoundedCornerShape(20.dp),
+                elevation = ButtonDefaults.buttonElevation(defaultElevation = 8.dp)
             ) {
-                Text("重玩本关", fontSize = 18.sp)
+                Text("🔄 重玩本关", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color.White)
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            OutlinedButton(
+                onClick = onBack,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(60.dp),
+                shape = RoundedCornerShape(20.dp)
+            ) {
+                Text("🏠 返回", fontSize = 20.sp)
             }
         }
     }

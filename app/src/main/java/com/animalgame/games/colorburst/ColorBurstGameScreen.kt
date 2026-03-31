@@ -11,6 +11,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
@@ -30,7 +32,7 @@ import com.animalgame.ui.components.GameTopBar
 import kotlin.math.sqrt
 
 /**
- * Color Burst 游戏 UI
+ * 色彩突围游戏 UI - 儿童友好版本
  */
 @Composable
 fun ColorBurstGameScreen(
@@ -43,15 +45,30 @@ fun ColorBurstGameScreen(
     val handleBack: () -> Unit = {
         when (gameState) {
             is GameState.Idle -> onBack()
-            else -> colorBurstModule?.resetToIdle() ?: module.onUserAction(GameAction.Quit)
+            else -> colorBurstModule?.resetToIdle()
         }
     }
 
+    // 彩虹糖果主题背景
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFF5F0E6))
+            .background(
+                Brush.verticalGradient(
+                    colors = listOf(
+                        Color(0xFFFFB6C1),  // 粉色
+                        Color(0xFFFFE4B5),  // 浅橙色
+                        Color(0xFFFFFFE0),  // 浅黄色
+                        Color(0xFF98FB98),  // 浅绿色
+                        Color(0xFF87CEEB),  // 天蓝色
+                        Color(0xFFDDA0DD),  // 浅紫色
+                    )
+                )
+            )
     ) {
+        // 装饰性彩虹和糖果
+        DecoratedColors()
+
         when (val state = gameState) {
             is GameState.Idle -> {
                 LevelSelectScreen(
@@ -95,6 +112,76 @@ fun ColorBurstGameScreen(
     }
 }
 
+// ==================== 装饰性彩虹糖果 ====================
+
+@Composable
+private fun DecoratedColors() {
+    val infiniteTransition = rememberInfiniteTransition(label = "deco")
+    val rainbowFloat by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 15f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(2000),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "rainbowFloat"
+    )
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        // 彩虹
+        Text(
+            text = "🌈",
+            fontSize = 60.sp,
+            modifier = Modifier
+                .align(Alignment.TopStart)
+                .offset(x = 20.dp, y = 60.dp + rainbowFloat.dp)
+        )
+
+        // 彩虹2
+        Text(
+            text = "🌈",
+            fontSize = 45.sp,
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .offset(x = (-60).dp, y = 120.dp - rainbowFloat.dp)
+        )
+
+        // 彩色气球
+        Text(
+            text = "🎈",
+            fontSize = 40.sp,
+            modifier = Modifier
+                .align(Alignment.TopStart)
+                .offset(x = 120.dp, y = 80.dp - rainbowFloat.dp)
+        )
+
+        Text(
+            text = "🎈",
+            fontSize = 35.sp,
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .offset(x = (-30).dp, y = 200.dp + rainbowFloat.dp)
+        )
+
+        // 星星
+        Text(
+            text = "⭐",
+            fontSize = 30.sp,
+            modifier = Modifier
+                .align(Alignment.BottomStart)
+                .offset(x = 40.dp, y = (-100).dp + rainbowFloat.dp)
+        )
+
+        Text(
+            text = "✨",
+            fontSize = 35.sp,
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .offset(x = (-50).dp, y = (-80).dp - rainbowFloat.dp)
+        )
+    }
+}
+
 // ==================== 关卡选择 ====================
 
 @Composable
@@ -117,17 +204,18 @@ private fun LevelSelectScreen(
                 .padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            // 大标题
             Text(
                 "👀 找出颜色略有不同的圆点！",
-                fontSize = 18.sp,
+                fontSize = 24.sp,
                 color = Color(0xFF5D4037),
                 textAlign = TextAlign.Center,
                 fontWeight = FontWeight.Bold
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                "越往后看，眼睛越要仔细哦~",
-                fontSize = 14.sp,
+                "颜色小侦探，快来找不同吧！🔍",
+                fontSize = 16.sp,
                 color = Color(0xFF8D6E63),
                 textAlign = TextAlign.Center
             )
@@ -141,9 +229,9 @@ private fun LevelSelectScreen(
         ) {
             Text(
                 "选择关卡",
-                fontSize = 16.sp,
+                fontSize = 18.sp,
                 color = Color(0xFF5D4037),
-                fontWeight = FontWeight.Medium
+                fontWeight = FontWeight.Bold
             )
 
             DifficultyCard(
@@ -201,16 +289,19 @@ private fun ReadyScreen(countdown: Int) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text(
                 text = countdown.toString(),
-                fontSize = 120.sp,
+                fontSize = 150.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color(0xFF81C784),
-                modifier = Modifier.graphicsLayer {
-                    scaleX = scale
-                    scaleY = scale
-                }
+                color = Color(0xFFFF7043),
+                modifier = Modifier.scale(scale)
             )
             Text(
-                text = "准备找出不同的圆点！",
+                text = "🎮 准备好了吗？",
+                fontSize = 24.sp,
+                color = Color(0xFF5D4037)
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = "👀 睁大眼睛找不同！",
                 fontSize = 18.sp,
                 color = Color(0xFF8D6E63)
             )
@@ -304,12 +395,14 @@ private fun PlayingScreen(
             onBack = onBack
         )
 
-        TimeDisplay(
+        // 儿童友好时间显示
+        KidFriendlyTimeDisplay(
             remainingTime = remainingTime,
             timeBonus = timeBonus,
-            modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp)
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
         )
 
+        // 连击显示
         if (combo > 1) {
             ComboDisplay(
                 combo = combo,
@@ -317,11 +410,12 @@ private fun PlayingScreen(
             )
         }
 
+        // 游戏区域
         Box(
             modifier = Modifier
                 .weight(1f)
                 .fillMaxWidth()
-                .padding(16.dp)
+                .padding(12.dp)
                 .graphicsLayer {
                     translationX = shakeOffset
                 }
@@ -334,7 +428,6 @@ private fun PlayingScreen(
                     .onSizeChanged { canvasSize = it }
                     .pointerInput(Unit) {
                         detectTapGestures { offset ->
-                            // offset 是相对于 Canvas 左上角的像素坐标
                             module.onUserAction(
                                 GameAction.Tap(
                                     x = offset.x,
@@ -346,7 +439,6 @@ private fun PlayingScreen(
             ) {
                 if (canvasSize == IntSize.Zero || dotsData.isEmpty()) return@Canvas
 
-                // dp 转像素
                 val dpValue = with(density) { 1.dp.toPx() }
 
                 for (dotData in dotsData) {
@@ -360,11 +452,9 @@ private fun PlayingScreen(
                     val colorS = (dotData["colorS"] as? Number)?.toFloat() ?: 0f
                     val colorL = (dotData["colorL"] as? Number)?.toFloat() ?: 0f
 
-                    // 圆心像素坐标
                     val centerX = x * size.width
                     val centerY = y * size.height
 
-                    // 漂浮效果
                     val floatOffset = if (hasFloatEffect) {
                         val angle = floatPhase * Math.PI.toFloat() / 180f + index * 0.5f
                         val amplitude = 5f * dpValue
@@ -380,18 +470,17 @@ private fun PlayingScreen(
                     val actualY = centerY + floatOffset.y
                     val actualRadius = radius * dpValue
 
-                    // 爆发动画
                     val isBursting = showBurst && burstIndex == index
                     val scale = if (isBursting) animatedBurstScale else 1f
                     val alpha = if (isBursting) animatedBurstAlpha else 1f
 
                     val dotColor = HSLColor(colorH, colorS, colorL).toComposeColor()
 
-                    // 阴影
+                    // 更可爱的阴影
                     drawCircle(
-                        color = Color.Black.copy(alpha = 0.1f * alpha),
+                        color = Color.Black.copy(alpha = 0.15f * alpha),
                         radius = actualRadius * scale,
-                        center = androidx.compose.ui.geometry.Offset(actualX + 3f * dpValue, actualY + 3f * dpValue)
+                        center = androidx.compose.ui.geometry.Offset(actualX + 2f * dpValue, actualY + 2f * dpValue)
                     )
 
                     // 圆点
@@ -400,26 +489,29 @@ private fun PlayingScreen(
                         radius = actualRadius * scale,
                         center = androidx.compose.ui.geometry.Offset(actualX, actualY)
                     )
+
+                    // 高光效果
+                    drawCircle(
+                        color = Color.White.copy(alpha = 0.4f * alpha),
+                        radius = actualRadius * 0.3f * scale,
+                        center = androidx.compose.ui.geometry.Offset(
+                            actualX - actualRadius * 0.2f,
+                            actualY - actualRadius * 0.2f
+                        )
+                    )
                 }
             }
         }
 
-        Text(
-            text = "找出颜色不同的圆点",
-            fontSize = 14.sp,
-            color = Color(0xFF8D6E63),
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 16.dp),
-            textAlign = TextAlign.Center
-        )
+        // 底部提示
+        KidFriendlyHint()
     }
 }
 
-// ==================== 时间显示 ====================
+// ==================== 儿童友好时间显示 ====================
 
 @Composable
-private fun TimeDisplay(
+private fun KidFriendlyTimeDisplay(
     remainingTime: Long,
     timeBonus: Int,
     modifier: Modifier = Modifier
@@ -429,25 +521,83 @@ private fun TimeDisplay(
 
     val timeColor = when {
         timeBonus > 0 -> Color(0xFF4CAF50)
-        timeBonus < 0 -> Color(0xFFE53935)
-        isLow -> Color(0xFFE53935)
+        timeBonus < 0 -> Color(0xFFFF5252)
+        isLow -> Color(0xFFFF5252)
         else -> Color(0xFF5D4037)
     }
 
-    Row(
+    Card(
         modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.Center,
-        verticalAlignment = Alignment.CenterVertically
+        colors = CardDefaults.cardColors(
+            containerColor = timeColor.copy(alpha = 0.15f)
+        ),
+        shape = RoundedCornerShape(20.dp)
     ) {
-        Text(text = "⏱️", fontSize = 20.sp, color = timeColor)
-        Spacer(modifier = Modifier.width(4.dp))
-        Text(text = "${seconds}s", fontSize = 24.sp, fontWeight = FontWeight.Bold, color = timeColor)
-
-        if (timeBonus != 0) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "⏱️",
+                fontSize = 32.sp
+            )
             Spacer(modifier = Modifier.width(8.dp))
-            val bonusText = if (timeBonus > 0) "+${timeBonus}s" else "${timeBonus}s"
-            val bonusColor = if (timeBonus > 0) Color(0xFF4CAF50) else Color(0xFFE53935)
-            Text(text = bonusText, fontSize = 18.sp, fontWeight = FontWeight.Bold, color = bonusColor)
+            Text(
+                text = "${seconds}秒",
+                fontSize = 32.sp,
+                fontWeight = FontWeight.Bold,
+                color = timeColor
+            )
+
+            if (timeBonus != 0) {
+                Spacer(modifier = Modifier.width(12.dp))
+                val bonusText = if (timeBonus > 0) "+${timeBonus}s" else "${timeBonus}s"
+                val bonusColor = if (timeBonus > 0) Color(0xFF4CAF50) else Color(0xFFFF5252)
+                Text(
+                    text = bonusText,
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = bonusColor
+                )
+            }
+        }
+    }
+}
+
+// ==================== 儿童友好提示 ====================
+
+@Composable
+private fun KidFriendlyHint() {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = Color(0xFF42A5F5).copy(alpha = 0.2f)
+        ),
+        shape = RoundedCornerShape(20.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(14.dp),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "🔍",
+                fontSize = 24.sp
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = "找出颜色不同的圆点！",
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF1976D2)
+            )
         }
     }
 }
@@ -457,7 +607,7 @@ private fun TimeDisplay(
 @Composable
 private fun ComboDisplay(combo: Int, modifier: Modifier = Modifier) {
     val scale by animateFloatAsState(
-        targetValue = 1.2f,
+        targetValue = 1.3f,
         animationSpec = repeatable(
             iterations = 2,
             animation = tween(100, easing = FastOutSlowInEasing)
@@ -465,22 +615,36 @@ private fun ComboDisplay(combo: Int, modifier: Modifier = Modifier) {
         label = "comboScale"
     )
 
-    Box(
+    Card(
         modifier = modifier
-            .clip(RoundedCornerShape(16.dp))
-            .background(Color(0xFFFFAB91).copy(alpha = 0.3f))
-            .padding(horizontal = 16.dp, vertical = 4.dp)
-            .graphicsLayer {
-                scaleX = scale
-                scaleY = scale
-            }
+            .padding(vertical = 8.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = Color(0xFFFF7043).copy(alpha = 0.3f)
+        ),
+        shape = RoundedCornerShape(20.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
     ) {
-        Text(
-            text = "🔥 ${combo}连击！",
-            fontSize = 16.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color(0xFFE64A19)
-        )
+        Row(
+            modifier = Modifier
+                .padding(horizontal = 20.dp, vertical = 8.dp)
+                .graphicsLayer {
+                    scaleX = scale
+                    scaleY = scale
+                },
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "🔥",
+                fontSize = 28.sp
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = "${combo}连击！",
+                fontSize = 22.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFFE64A19)
+            )
+        }
     }
 }
 
@@ -500,26 +664,27 @@ private fun PausedScreen(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Text("⏸️ 游戏暂停", fontSize = 28.sp, fontWeight = FontWeight.Bold, color = Color(0xFF5D4037))
+        Text("⏸️ 游戏暂停", fontSize = 32.sp, fontWeight = FontWeight.Bold, color = Color(0xFF5D4037))
         Spacer(modifier = Modifier.height(24.dp))
-        Text("得分: $score", fontSize = 18.sp, color = Color(0xFF5D4037))
+        Text("得分: $score", fontSize = 22.sp, color = Color(0xFF5D4037), fontWeight = FontWeight.Bold)
         Text("用时: ${elapsedTime / 1000}s", fontSize = 18.sp, color = Color(0xFF8D6E63))
         Spacer(modifier = Modifier.height(32.dp))
         Button(
             onClick = onResume,
-            modifier = Modifier.fillMaxWidth().height(56.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF81C784)),
-            shape = RoundedCornerShape(16.dp)
+            modifier = Modifier.fillMaxWidth().height(60.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50)),
+            shape = RoundedCornerShape(20.dp),
+            elevation = ButtonDefaults.buttonElevation(defaultElevation = 8.dp)
         ) {
-            Text("继续", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+            Text("▶️ 继续", fontSize = 20.sp, fontWeight = FontWeight.Bold)
         }
         Spacer(modifier = Modifier.height(12.dp))
         OutlinedButton(
             onClick = onQuit,
-            modifier = Modifier.fillMaxWidth().height(56.dp),
-            shape = RoundedCornerShape(16.dp)
+            modifier = Modifier.fillMaxWidth().height(60.dp),
+            shape = RoundedCornerShape(20.dp)
         ) {
-            Text("退出", fontSize = 18.sp)
+            Text("🏠 返回", fontSize = 20.sp)
         }
     }
 }
@@ -533,6 +698,15 @@ private fun CompletedScreen(
     onReplay: () -> Unit,
     onBack: () -> Unit
 ) {
+    val successScale by animateFloatAsState(
+        targetValue = if (state.isSuccess) 1f else 0f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessLow
+        ),
+        label = "successScale"
+    )
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -540,39 +714,44 @@ private fun CompletedScreen(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Text(text = if (state.isSuccess) "🎉" else "⏰", fontSize = 64.sp)
-        Spacer(modifier = Modifier.height(16.dp))
+        // 成功/失败大表情
         Text(
-            text = if (state.isSuccess) "恭喜过关！" else "时间耗尽",
-            fontSize = 28.sp,
+            text = if (state.isSuccess) "🎉" else "⏰",
+            fontSize = 80.sp,
+            modifier = Modifier.scale(if (state.isSuccess) successScale else 1f)
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // 文字
+        Text(
+            text = if (state.isSuccess) "太棒了！🎊" else "加油哦！💪",
+            fontSize = 32.sp,
             fontWeight = FontWeight.Bold,
-            color = if (state.isSuccess) Color(0xFF81C784) else Color(0xFFE57373)
+            color = if (state.isSuccess) Color(0xFF4CAF50) else Color(0xFFFF7043)
         )
         Spacer(modifier = Modifier.height(24.dp))
 
+        // 星星
         Row {
             repeat(3) { index ->
                 val starScale by animateFloatAsState(
                     targetValue = if (index < state.stars) 1.2f else 1f,
-                    animationSpec = tween(300, delayMillis = index * 100),
+                    animationSpec = tween(300, delayMillis = index * 150),
                     label = "star$index"
                 )
                 Text(
                     text = if (index < state.stars) "⭐" else "☆",
-                    fontSize = 40.sp,
-                    modifier = Modifier.graphicsLayer {
-                        scaleX = starScale
-                        scaleY = starScale
-                    }
+                    fontSize = 48.sp,
+                    modifier = Modifier.scale(starScale)
                 )
             }
         }
 
         Spacer(modifier = Modifier.height(16.dp))
-        Text("得分: ${state.score}", fontSize = 20.sp, color = Color(0xFF5D4037))
+        Text("得分: ${state.score}", fontSize = 22.sp, color = Color(0xFF5D4037), fontWeight = FontWeight.Bold)
         Text(
             "关卡: ${module.getDifficultyName()} · 第${module.getLevelIndex()}关",
-            fontSize = 16.sp,
+            fontSize = 18.sp,
             color = Color(0xFF8D6E63)
         )
         Spacer(modifier = Modifier.height(32.dp))
@@ -580,30 +759,32 @@ private fun CompletedScreen(
         if (state.isSuccess && module.getLevelIndex() < 10) {
             Button(
                 onClick = { module.start(state.level + 1) },
-                modifier = Modifier.fillMaxWidth().height(56.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF81C784)),
-                shape = RoundedCornerShape(16.dp)
+                modifier = Modifier.fillMaxWidth().height(60.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50)),
+                shape = RoundedCornerShape(20.dp),
+                elevation = ButtonDefaults.buttonElevation(defaultElevation = 8.dp)
             ) {
-                Text("下一关", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                Text("下一关 ➡️", fontSize = 20.sp, fontWeight = FontWeight.Bold)
             }
             Spacer(modifier = Modifier.height(12.dp))
         }
 
         Button(
             onClick = onReplay,
-            modifier = Modifier.fillMaxWidth().height(56.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFAB91)),
-            shape = RoundedCornerShape(16.dp)
+            modifier = Modifier.fillMaxWidth().height(60.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF7043)),
+            shape = RoundedCornerShape(20.dp),
+            elevation = ButtonDefaults.buttonElevation(defaultElevation = 8.dp)
         ) {
-            Text("重玩本关", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color(0xFF5D4037))
+            Text("🔄 重玩本关", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color.White)
         }
         Spacer(modifier = Modifier.height(12.dp))
         OutlinedButton(
             onClick = onBack,
-            modifier = Modifier.fillMaxWidth().height(56.dp),
-            shape = RoundedCornerShape(16.dp)
+            modifier = Modifier.fillMaxWidth().height(60.dp),
+            shape = RoundedCornerShape(20.dp)
         ) {
-            Text("返回", fontSize = 18.sp)
+            Text("🏠 返回", fontSize = 20.sp)
         }
     }
 }
@@ -622,19 +803,19 @@ private fun AllCompletedScreen(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Text("🏆", fontSize = 80.sp)
+        Text("🏆", fontSize = 100.sp)
         Spacer(modifier = Modifier.height(16.dp))
-        Text("🎉 全部通关！", fontSize = 32.sp, fontWeight = FontWeight.Bold, color = Color(0xFFFFD700))
+        Text("🎉 全部通关！", fontSize = 36.sp, fontWeight = FontWeight.Bold, color = Color(0xFFFFB300))
         Spacer(modifier = Modifier.height(24.dp))
-        Text("总得分: ${state.totalScore}", fontSize = 20.sp, color = Color(0xFF5D4037))
-        Text("总用时: ${state.totalTime / 1000}s", fontSize = 18.sp, color = Color(0xFF8D6E63))
+        Text("总得分: ${state.totalScore}", fontSize = 24.sp, color = Color(0xFF5D4037), fontWeight = FontWeight.Bold)
+        Text("总用时: ${state.totalTime / 1000}s", fontSize = 20.sp, color = Color(0xFF8D6E63))
         Spacer(modifier = Modifier.height(32.dp))
         OutlinedButton(
             onClick = onBack,
-            modifier = Modifier.fillMaxWidth().height(56.dp),
-            shape = RoundedCornerShape(16.dp)
+            modifier = Modifier.fillMaxWidth().height(60.dp),
+            shape = RoundedCornerShape(20.dp)
         ) {
-            Text("返回", fontSize = 18.sp)
+            Text("🏠 返回", fontSize = 20.sp)
         }
     }
 }

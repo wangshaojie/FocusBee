@@ -178,6 +178,25 @@ fun SettingsScreen(
                 title = "更多设置",
                 icon = null
             ) {
+                // 深色模式设置
+                SettingsSelectorItem(
+                    title = "深色模式",
+                    value = when {
+                        settings.darkModeEnabled == true -> "深色"
+                        else -> "跟随系统"
+                    },
+                    onClick = {
+                        scope.launch {
+                            // 循环切换: 0=跟随系统 -> 1=浅色 -> 2=深色 -> 0=跟随系统
+                            val currentMode = if (settings.darkModeEnabled == true) 2 else 0
+                            val newMode = (currentMode + 1) % 3
+                            SettingsManager.updateDarkMode(context, newMode)
+                        }
+                    }
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
                 // 语言设置（预留）
                 SettingsInfoItem(
                     title = "语言",
@@ -351,5 +370,42 @@ private fun SettingsInfoItem(
             fontSize = 14.sp,
             color = SettingsColors.SecondaryText
         )
+    }
+}
+
+/**
+ * 可点击的选择项
+ */
+@Composable
+private fun SettingsSelectorItem(
+    title: String,
+    value: String,
+    onClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() },
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = title,
+            fontSize = 14.sp,
+            color = SettingsColors.PrimaryText
+        )
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                text = value,
+                fontSize = 14.sp,
+                color = SettingsColors.Accent
+            )
+            Spacer(modifier = Modifier.width(4.dp))
+            Text(
+                text = ">",
+                fontSize = 14.sp,
+                color = SettingsColors.SecondaryText
+            )
+        }
     }
 }
