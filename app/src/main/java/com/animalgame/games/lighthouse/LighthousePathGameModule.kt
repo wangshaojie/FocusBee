@@ -11,16 +11,12 @@ import kotlin.random.Random
 
 /**
  * 灯塔路径（Lighthouse Path）游戏模块
- * 玩法：记忆灯塔闪烁顺序，依次点击
+ * 玩法：记忆灯塔闪烁顺序，依次点击还原
+ *
+ * 核心规则：
+ * - 每个格子在序列中最多只能出现一次
+ * - 序列播放完后，用户按顺序点击还原
  */
-
-// ==================== 游戏阶段 ====================
-
-enum class GamePhase {
-    SHOWING_SEQUENCE,  // 显示序列中
-    WAITING_INPUT,      // 等待玩家输入
-    RESULT              // 结果
-}
 
 // ==================== 格子状态 ====================
 
@@ -31,12 +27,30 @@ enum class CellState {
     WRONG           // 错误点击
 }
 
-// ==================== 游戏配置 ====================
+// ==================== 游戏阶段 ====================
 
-data class LevelConfig(
-    val sequenceLength: Int,
+enum class GamePhase {
+    SHOWING_SEQUENCE,  // 显示序列中
+    WAITING_INPUT,     // 等待玩家输入
+    RESULT             // 结果
+}
+
+// ==================== 难度等级 ====================
+
+enum class Difficulty {
+    BEGINNER,      // 入门：5x5, 短序列
+    INTERMEDIATE,  // 进阶：5x5, 中等序列
+    ADVANCED,      // 挑战：5x5, 较长序列
+    EXTREME        // 极限：5x5, 长序列
+}
+
+// ==================== 难度配置 ====================
+
+data class DifficultyConfig(
+    val gridSize: Int,           // 网格尺寸
+    val sequenceLength: IntRange, // 序列长度范围
     val highlightDuration: Long,  // 高亮持续时间(ms)
-    val intervalDuration: Long     // 间隔时间(ms)
+    val intervalDuration: Long    // 间隔时间(ms)
 )
 
 // ==================== 游戏模块 ====================
@@ -46,64 +60,85 @@ class LighthousePathGameModule : AbstractGameModule() {
     override val gameId: String = "lighthouse_path"
     override val gameName: String = "灯塔路径"
     override val iconAsset: String = "logo1.png"
-    override val totalLevels: Int = 30
+    override val totalLevels: Int = 200  // 4难度 x 50关
     override val description: String = "记忆灯塔闪烁顺序"
 
-    // 协程作用域（使用父类的gameScope）
+    // 调试模式
+    private val DEBUG = true
 
-    // 游戏数据
-    private var sequence = listOf<Int>()           // 正确序列
+    // ==================== 游戏数据 ====================
+
+    private var sequence = listOf<Int>()           // 正确序列（每个索引唯一）
     private var playerInput = mutableListOf<Int>()   // 玩家输入
     private var cellStates = Array(16) { CellState.NORMAL }  // 格子视觉状态
-    private var cellClickCounts = Array(16) { 0 }   // 每个格子的点击次数追踪
     private var currentPhase = GamePhase.SHOWING_SEQUENCE
     private var highlightedCell = -1                // 当前高亮的格子
     private var sequenceIndex = 0                   // 当前播放到序列第几个
     private var showSequenceComplete = false        // 序列播放是否完成
     private var wrongCellIndex = -1                 // 错误的格子索引
     private var sequenceJob: kotlinx.coroutines.Job? = null  // 序列播放协程
-
-    // 调试模式
-    private val DEBUG = true
+    private var currentDifficulty = Difficulty.BEGINNER
 
     companion object {
-        const val GRID_SIZE = 16  // 4x4 = 16
-    }
+        const val GRID_SIZE = 16  // 4x4 = 16 格子
 
-    // ==================== 难度配置 ====================
-
-    private fun getLevelConfig(level: Int): LevelConfig {
-        return when {
-            level <= 5 -> LevelConfig(
-                sequenceLength = 2 + (level - 1) / 2,
+        // 难度配置
+        private val DIFFICULTY_CONFIGS = mapOf(
+            Difficulty.BEGINNER to DifficultyConfig(
+                gridSize = 16,
+                sequenceLength = 3..4,
                 highlightDuration = 600L,
                 intervalDuration = 300L
-            )
-            level <= 10 -> LevelConfig(
-                sequenceLength = 4 + (level - 5) / 2,
+            ),
+            Difficulty.INTERMEDIATE to DifficultyConfig(
+                gridSize = 16,
+                sequenceLength = 5..6,
                 highlightDuration = 500L,
-                intervalDuration = 200L
-            )
-            level <= 20 -> LevelConfig(
-                sequenceLength = 6 + (level - 10) / 3,
+                intervalDuration = 250L
+            ),
+            Difficulty.ADVANCED to DifficultyConfig(
+                gridSize = 16,
+                sequenceLength = 7..8,
                 highlightDuration = 400L,
+                intervalDuration = 200L
+            ),
+            Difficulty.EXTREME to DifficultyConfig(
+                gridSize = 16,
+                sequenceLength = 9..10,
+                highlightDuration = 300L,
                 intervalDuration = 150L
             )
-            else -> LevelConfig(
-                sequenceLength = 8 + (level - 20) / 3,
-                highlightDuration = 300L,
-                intervalDuration = 100L
-            )
+        )
+    }
+
+    // ==================== 关卡解析 ====================
+
+    /**
+     * 根据关卡ID解析难度和关卡索引
+     */
+    private fun parseLevelId(level: Int): Pair<Difficulty, Int> {
+        return when {
+            level in 1..50 -> Difficulty.BEGINNER to level
+            level in 51..100 -> Difficulty.INTERMEDIATE to (level - 50)
+            level in 101..150 -> Difficulty.ADVANCED to (level - 100)
+            else -> Difficulty.EXTREME to (level - 150)
         }
     }
 
-    // ==================== 序列生成 ====================
-
-    private fun generateSequence(length: Int): List<Int> {
-        return (0 until length).map { Random.nextInt(GRID_SIZE) }
+    /**
+     * 获取关卡名称
+     */
+    fun getLevelId(): String {
+        val (difficulty, index) = parseLevelId(currentLevel)
+        return when (difficulty) {
+            Difficulty.BEGINNER -> "beginner_$index"
+            Difficulty.INTERMEDIATE -> "intermediate_$index"
+            Difficulty.ADVANCED -> "advanced_$index"
+            Difficulty.EXTREME -> "extreme_$index"
+        }
     }
 
-    // ==================== 游戏生命周期 ====================
+    // ==================== 游戏初始化 ====================
 
     override fun start(level: Int) {
         currentLevel = level.coerceIn(1, totalLevels)
@@ -111,23 +146,26 @@ class LighthousePathGameModule : AbstractGameModule() {
         mistakeCount = 0
         playerInput.clear()
         cellStates = Array(GRID_SIZE) { CellState.NORMAL }
-        cellClickCounts = Array(GRID_SIZE) { 0 }
         currentPhase = GamePhase.SHOWING_SEQUENCE
         highlightedCell = -1
         sequenceIndex = 0
         showSequenceComplete = false
         wrongCellIndex = -1
 
+        // 解析难度
+        val (difficulty, _) = parseLevelId(currentLevel)
+        currentDifficulty = difficulty
+
         // 直接开始游戏，不显示倒计时
         startGame()
     }
 
     override fun startGame() {
-        val config = getLevelConfig(currentLevel)
-        sequence = generateSequence(config.sequenceLength)
+        val config = DIFFICULTY_CONFIGS[currentDifficulty]!!
+        // 生成序列（每个格子最多出现一次）
+        sequence = generateUniqueSequence(config.sequenceLength)
         playerInput.clear()
         cellStates = Array(GRID_SIZE) { CellState.NORMAL }
-        cellClickCounts = Array(GRID_SIZE) { 0 }
         currentPhase = GamePhase.SHOWING_SEQUENCE
         highlightedCell = -1
         sequenceIndex = 0
@@ -135,8 +173,7 @@ class LighthousePathGameModule : AbstractGameModule() {
         wrongCellIndex = -1
 
         if (DEBUG) {
-            println("LighthousePath: Level $currentLevel, sequence length = ${sequence.size}")
-            println("LighthousePath: Sequence = $sequence")
+            println("LighthousePath: Level $currentLevel (${currentDifficulty.name}), sequence = $sequence")
         }
 
         // 进入 Playing 状态
@@ -146,10 +183,26 @@ class LighthousePathGameModule : AbstractGameModule() {
         playSequence()
     }
 
+    // ==================== 序列生成（核心修复） ====================
+
+    /**
+     * 生成不重复的序列
+     * 每个格子索引在序列中最多只出现一次
+     */
+    private fun generateUniqueSequence(lengthRange: IntRange): List<Int> {
+        val length = lengthRange.random()
+        // 创建所有可用格子的列表
+        val availableCells = (0 until GRID_SIZE).toMutableList()
+        // 打乱顺序
+        availableCells.shuffle()
+        // 取前length个（如果length大于可用格子数，则取所有）
+        return availableCells.take(length.coerceAtMost(GRID_SIZE))
+    }
+
     // ==================== 序列播放 ====================
 
     private fun playSequence() {
-        val config = getLevelConfig(currentLevel)
+        val config = DIFFICULTY_CONFIGS[currentDifficulty]!!
         currentPhase = GamePhase.SHOWING_SEQUENCE
 
         sequenceJob?.cancel()
@@ -167,7 +220,7 @@ class LighthousePathGameModule : AbstractGameModule() {
                 updatePlayingState()
 
                 if (DEBUG) {
-                    println("LighthousePath: Highlight cell ${highlightedCell}")
+                    println("LighthousePath: Highlight cell ${highlightedCell} ($i/${sequence.size})")
                 }
 
                 // 高亮持续时间
@@ -205,7 +258,6 @@ class LighthousePathGameModule : AbstractGameModule() {
         showSequenceComplete = false
         wrongCellIndex = -1
         cellStates = Array(GRID_SIZE) { CellState.NORMAL }
-        cellClickCounts = Array(GRID_SIZE) { 0 }
         playerInput.clear()
         updatePlayingState()
 
@@ -215,11 +267,32 @@ class LighthousePathGameModule : AbstractGameModule() {
     // ==================== 处理玩家输入 ====================
 
     override fun onUserAction(action: GameAction): ActionResult? {
-        when (action) {
+        return when (action) {
             is GameAction.TapIndex -> {
-                return handleCellClick(action.index)
+                handleCellClick(action.index)
             }
-            else -> return super.onUserAction(action)
+            is GameAction.NextLevel -> {
+                // 每个难度的最后一关通关后不进入下一难度
+                if (currentLevel == totalLevels) {
+                    _state.value = GameState.AllCompleted(
+                        totalTime = stopTimer(),
+                        totalScore = currentScore,
+                        levelResults = emptyList()
+                    )
+                    null
+                } else if (currentLevel % 50 == 0) {
+                    // 难度最后一关，显示通关界面
+                    _state.value = GameState.AllCompleted(
+                        totalTime = stopTimer(),
+                        totalScore = currentScore,
+                        levelResults = emptyList()
+                    )
+                    null
+                } else {
+                    super.onUserAction(action)
+                }
+            }
+            else -> super.onUserAction(action)
         }
     }
 
@@ -235,13 +308,14 @@ class LighthousePathGameModule : AbstractGameModule() {
         val expectedIndex = sequence.getOrNull(playerInput.size)
 
         if (DEBUG) {
-            println("LighthousePath: Click cell $index, expected ${expectedIndex}, playerInput size ${playerInput.size}")
+            println("LighthousePath: Click cell $index, expected $expectedIndex, progress ${playerInput.size}/${sequence.size}")
         }
 
         if (index == expectedIndex) {
-            // 正确：增加点击计数，保持格子为可点击状态
-            cellClickCounts[index]++
+            // 正确
             playerInput.add(index)
+            // 将点击的格子状态设置为 CORRECT
+            cellStates[index] = CellState.CORRECT
             updatePlayingState()
 
             // 检查是否完成
@@ -252,7 +326,6 @@ class LighthousePathGameModule : AbstractGameModule() {
             return ActionResult.Success
         } else {
             // 错误
-            cellStates[index] = CellState.WRONG
             wrongCellIndex = index
             mistakeCount++
             updatePlayingState()
@@ -315,25 +388,23 @@ class LighthousePathGameModule : AbstractGameModule() {
     private fun buildGameData(): Map<String, Any> {
         return mapOf(
             "cellStates" to cellStates.map { it.name },
-            "cellClickCounts" to cellClickCounts.toList(),
             "highlightedCell" to highlightedCell,
             "currentPhase" to currentPhase.name,
             "sequenceIndex" to sequenceIndex,
             "showSequenceComplete" to showSequenceComplete,
             "wrongCellIndex" to wrongCellIndex,
             "playerProgress" to playerInput.size,
-            "totalToMatch" to sequence.size
+            "totalToMatch" to sequence.size,
+            "difficulty" to currentDifficulty.name,
+            "levelId" to getLevelId()
         )
     }
 
     // ==================== 星级计算 ====================
 
     override fun calculateStars(timeMillis: Long, mistakes: Int, level: Int): Int {
-        // 无错误 + 快速 → 3星
-        // 少量错误(1次) → 2星
-        // 多次错误 → 1星
         return when {
-            mistakes == 0 && timeMillis < level * 1500 -> 3
+            mistakes == 0 && timeMillis < level * 1000 -> 3
             mistakes <= 1 -> 2
             else -> 1
         }
@@ -342,16 +413,16 @@ class LighthousePathGameModule : AbstractGameModule() {
     // ==================== 公共方法 ====================
 
     fun getDifficultyName(): String {
-        return when {
-            currentLevel <= 5 -> "入门"
-            currentLevel <= 10 -> "进阶"
-            currentLevel <= 20 -> "挑战"
-            else -> "极限"
+        return when (currentDifficulty) {
+            Difficulty.BEGINNER -> "入门"
+            Difficulty.INTERMEDIATE -> "进阶"
+            Difficulty.ADVANCED -> "挑战"
+            Difficulty.EXTREME -> "极限"
         }
     }
 
     fun getLevelIndex(): Int {
-        return ((currentLevel - 1) % 10) + 1
+        return ((currentLevel - 1) % 50) + 1
     }
 
     fun restartLevel() {

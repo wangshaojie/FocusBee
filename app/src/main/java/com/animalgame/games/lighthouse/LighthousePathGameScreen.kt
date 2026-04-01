@@ -6,7 +6,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -17,6 +16,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -25,12 +25,10 @@ import androidx.compose.ui.unit.sp
 import com.animalgame.core.game.GameAction
 import com.animalgame.core.game.GameModule
 import com.animalgame.core.game.GameState
-import com.animalgame.ui.components.DifficultyCard
-import com.animalgame.ui.components.DifficultyColors
 import com.animalgame.ui.components.GameTopBar
 
 /**
- * 灯塔路径游戏 UI - 儿童友好版本
+ * 灯塔路径游戏 UI - 记忆序列版本
  */
 @Composable
 fun LighthousePathGameScreen(
@@ -47,17 +45,17 @@ fun LighthousePathGameScreen(
         }
     }
 
-    // 夜空主题背景（灯塔主题）
+    // 夜空主题背景
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(
                 Brush.verticalGradient(
                     colors = listOf(
-                        Color(0xFF1A237E),  // 深蓝（夜空）
-                        Color(0xFF283593),  // 蓝色
-                        Color(0xFF3F51B5),  // 中蓝
-                        Color(0xFF5C6BC0),  // 浅蓝
+                        Color(0xFF1A237E),
+                        Color(0xFF283593),
+                        Color(0xFF3F51B5),
+                        Color(0xFF5C6BC0),
                     )
                 )
             )
@@ -115,7 +113,6 @@ fun LighthousePathGameScreen(
 private fun DecoratedStars() {
     val infiniteTransition = rememberInfiniteTransition(label = "stars")
 
-    // 星星闪烁动画
     val star1Alpha by infiniteTransition.animateFloat(
         initialValue = 0.3f,
         targetValue = 1f,
@@ -145,64 +142,13 @@ private fun DecoratedStars() {
     )
 
     Box(modifier = Modifier.fillMaxSize()) {
-        // 各种小星星
-        Text(
-            text = "⭐",
-            fontSize = 20.sp,
-            modifier = Modifier
-                .align(Alignment.TopStart)
-                .offset(x = 30.dp, y = 80.dp)
-                .alpha(star1Alpha)
-        )
-        Text(
-            text = "⭐",
-            fontSize = 16.sp,
-            modifier = Modifier
-                .align(Alignment.TopEnd)
-                .offset(x = (-50).dp, y = 120.dp)
-                .alpha(star2Alpha)
-        )
-        Text(
-            text = "✨",
-            fontSize = 24.sp,
-            modifier = Modifier
-                .align(Alignment.TopStart)
-                .offset(x = 80.dp, y = 150.dp)
-                .alpha(star3Alpha)
-        )
-        Text(
-            text = "⭐",
-            fontSize = 14.sp,
-            modifier = Modifier
-                .align(Alignment.TopEnd)
-                .offset(x = (-30).dp, y = 200.dp)
-                .alpha(star1Alpha)
-        )
-        Text(
-            text = "✨",
-            fontSize = 18.sp,
-            modifier = Modifier
-                .align(Alignment.TopStart)
-                .offset(x = 150.dp, y = 100.dp)
-                .alpha(star2Alpha)
-        )
-        Text(
-            text = "⭐",
-            fontSize = 12.sp,
-            modifier = Modifier
-                .align(Alignment.TopEnd)
-                .offset(x = (-80).dp, y = 160.dp)
-                .alpha(star3Alpha)
-        )
-
-        // 月亮
-        Text(
-            text = "🌙",
-            fontSize = 50.sp,
-            modifier = Modifier
-                .align(Alignment.TopEnd)
-                .offset(x = (-20).dp, y = 50.dp)
-        )
+        Text("⭐", fontSize = 20.sp, modifier = Modifier.align(Alignment.TopStart).offset(x = 30.dp, y = 80.dp).alpha(star1Alpha))
+        Text("⭐", fontSize = 16.sp, modifier = Modifier.align(Alignment.TopEnd).offset(x = (-50).dp, y = 120.dp).alpha(star2Alpha))
+        Text("✨", fontSize = 24.sp, modifier = Modifier.align(Alignment.TopStart).offset(x = 80.dp, y = 150.dp).alpha(star3Alpha))
+        Text("⭐", fontSize = 14.sp, modifier = Modifier.align(Alignment.TopEnd).offset(x = (-30).dp, y = 200.dp).alpha(star1Alpha))
+        Text("✨", fontSize = 18.sp, modifier = Modifier.align(Alignment.TopStart).offset(x = 150.dp, y = 100.dp).alpha(star2Alpha))
+        Text("⭐", fontSize = 12.sp, modifier = Modifier.align(Alignment.TopEnd).offset(x = (-80).dp, y = 160.dp).alpha(star3Alpha))
+        Text("🌙", fontSize = 50.sp, modifier = Modifier.align(Alignment.TopEnd).offset(x = (-20).dp, y = 50.dp))
     }
 }
 
@@ -228,7 +174,6 @@ private fun LevelSelectScreen(
                 .padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // 大标题
             Text(
                 "🏠 记住灯塔闪烁的顺序！",
                 fontSize = 24.sp,
@@ -251,44 +196,74 @@ private fun LevelSelectScreen(
                 .padding(horizontal = 24.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Text(
-                "选择关卡",
-                fontSize = 18.sp,
-                color = Color.White,
-                fontWeight = FontWeight.Bold
-            )
+            Text("选择难度", fontSize = 18.sp, color = Color.White, fontWeight = FontWeight.Bold)
 
+            // 入门 1-50
             DifficultyCard(
                 emoji = "🌱",
-                title = "入门 (1-5关)",
-                subtitle = "2-3个灯塔，简单顺序",
-                color = DifficultyColors.EasyColor,
+                title = "入门 (1-50关)",
+                subtitle = "3-4个灯塔，简单顺序",
+                color = Color(0xFF4CAF50),
                 onClick = { module.start(1) }
             )
 
+            // 进阶 51-100
             DifficultyCard(
                 emoji = "🌿",
-                title = "进阶 (6-10关)",
-                subtitle = "4-5个灯塔，稍复杂",
-                color = DifficultyColors.MediumColor,
-                onClick = { module.start(6) }
+                title = "进阶 (51-100关)",
+                subtitle = "5-6个灯塔，稍复杂",
+                color = Color(0xFF2196F3),
+                onClick = { module.start(51) }
             )
 
+            // 挑战 101-150
             DifficultyCard(
                 emoji = "🌳",
-                title = "挑战 (11-20关)",
-                subtitle = "6-8个灯塔，需要记忆",
-                color = DifficultyColors.HardColor,
-                onClick = { module.start(11) }
+                title = "挑战 (101-150关)",
+                subtitle = "7-8个灯塔，需要记忆",
+                color = Color(0xFFFF9800),
+                onClick = { module.start(101) }
             )
 
+            // 极限 151-200
             DifficultyCard(
                 emoji = "🏆",
-                title = "极限 (21-30关)",
-                subtitle = "8+个灯塔，挑战极限",
-                color = DifficultyColors.ExpertColor,
-                onClick = { module.start(21) }
+                title = "极限 (151-200关)",
+                subtitle = "9-10个灯塔，挑战极限",
+                color = Color(0xFFF44336),
+                onClick = { module.start(151) }
             )
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun DifficultyCard(
+    emoji: String,
+    title: String,
+    subtitle: String,
+    color: Color,
+    onClick: () -> Unit
+) {
+    Card(
+        onClick = onClick,
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = color.copy(alpha = 0.8f)),
+        shape = RoundedCornerShape(16.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(20.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(emoji, fontSize = 36.sp)
+            Spacer(modifier = Modifier.width(16.dp))
+            Column {
+                Text(title, fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                Text(subtitle, fontSize = 14.sp, color = Color.White.copy(alpha = 0.8f))
+            }
         }
     }
 }
@@ -306,10 +281,7 @@ private fun ReadyScreen(countdown: Int) {
         label = "countdownScale"
     )
 
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
+    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text(
                 text = countdown.toString(),
@@ -318,11 +290,7 @@ private fun ReadyScreen(countdown: Int) {
                 color = Color(0xFFFFD54F),
                 modifier = Modifier.scale(scale)
             )
-            Text(
-                text = "🎮 准备好了吗？",
-                fontSize = 24.sp,
-                color = Color.White
-            )
+            Text("🎮 准备好了吗？", fontSize = 24.sp, color = Color.White)
         }
     }
 }
@@ -335,9 +303,7 @@ private fun PlayingScreen(
     module: LighthousePathGameModule,
     onBack: () -> Unit
 ) {
-    // 解析游戏数据
     val cellStatesData = state.data["cellStates"] as? List<*> ?: emptyList<Any>()
-    val cellClickCountsData = state.data["cellClickCounts"] as? List<*> ?: emptyList<Any>()
     val highlightedCell = state.data["highlightedCell"] as? Int ?: -1
     val currentPhaseStr = state.data["currentPhase"] as? String ?: "SHOWING_SEQUENCE"
     val playerProgress = state.data["playerProgress"] as? Int ?: 0
@@ -363,16 +329,9 @@ private fun PlayingScreen(
         if (states.size == 16) states else Array(16) { CellState.NORMAL }
     }
 
-    // 转换点击计数
-    val cellClickCounts = remember(cellClickCountsData) {
-        cellClickCountsData.mapNotNull { (it as? Number)?.toInt() ?: 0 }.toIntArray()
-    }.let { counts ->
-        if (counts.size == 16) counts else IntArray(16) { 0 }
-    }
-
     Column(modifier = Modifier.fillMaxSize()) {
         GameTopBar(
-            title = "灯塔路径",
+            title = "🏠 ${module.getLevelId()}",
             level = module.getLevelIndex(),
             difficultyName = module.getDifficultyName(),
             score = state.score,
@@ -398,11 +357,12 @@ private fun PlayingScreen(
         ) {
             KidFriendlyGridView(
                 cellStates = cellStates,
-                cellClickCounts = cellClickCounts,
                 highlightedCell = highlightedCell,
                 wrongCellIndex = wrongCellIndex,
+                playerProgress = playerProgress,
                 isInputEnabled = currentPhase == GamePhase.WAITING_INPUT,
                 onCellClick = { index ->
+                    android.util.Log.d("LighthouseDebug", "Cell clicked: index=$index, phase=$currentPhase, playerProgress=$playerProgress")
                     module.onUserAction(GameAction.TapIndex(index))
                 }
             )
@@ -442,9 +402,7 @@ private fun KidFriendlyStatusBar(
 
     Card(
         modifier = modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = bgColor
-        ),
+        colors = CardDefaults.cardColors(containerColor = bgColor),
         shape = RoundedCornerShape(20.dp)
     ) {
         Row(
@@ -454,10 +412,7 @@ private fun KidFriendlyStatusBar(
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
-                text = emoji,
-                fontSize = 28.sp
-            )
+            Text(text = emoji, fontSize = 28.sp)
             Spacer(modifier = Modifier.width(12.dp))
             Text(
                 text = text,
@@ -474,32 +429,31 @@ private fun KidFriendlyStatusBar(
 @Composable
 private fun KidFriendlyGridView(
     cellStates: Array<CellState>,
-    cellClickCounts: IntArray,
     highlightedCell: Int,
     wrongCellIndex: Int,
+    playerProgress: Int,
     isInputEnabled: Boolean,
     onCellClick: (Int) -> Unit
 ) {
-    val columns = 4
-
     Column(
-        verticalArrangement = Arrangement.spacedBy(14.dp)
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         for (row in 0 until 4) {
             Row(
-                horizontalArrangement = Arrangement.spacedBy(14.dp)
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 for (col in 0 until 4) {
-                    val index = row * columns + col
-                    val clickCount = if (index < cellClickCounts.size) cellClickCounts[index] else 0
-
+                    val index = row * 4 + col
                     KidFriendlyCellView(
                         cellState = cellStates.getOrElse(index) { CellState.NORMAL },
-                        clickCount = clickCount,
                         isHighlighted = index == highlightedCell,
                         isWrong = index == wrongCellIndex,
+                        isCorrect = cellStates.getOrElse(index) { CellState.NORMAL } == CellState.CORRECT,
                         isInputEnabled = isInputEnabled,
-                        onClick = { onCellClick(index) }
+                        onClick = { onCellClick(index) },
+                        modifier = Modifier.weight(1f)
                     )
                 }
             }
@@ -512,20 +466,19 @@ private fun KidFriendlyGridView(
 @Composable
 private fun KidFriendlyCellView(
     cellState: CellState,
-    clickCount: Int,
     isHighlighted: Boolean,
     isWrong: Boolean,
+    isCorrect: Boolean,
     isInputEnabled: Boolean,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
-    val hasCorrectClicks = clickCount > 0
-
     // 高亮时的放大动画
     val scale by animateFloatAsState(
         targetValue = when {
-            isHighlighted -> 1.15f
-            isWrong -> 1.1f
-            hasCorrectClicks -> 1.05f
+            isHighlighted -> 1.1f
+            isWrong -> 1.05f
+            isCorrect -> 1.02f
             else -> 1f
         },
         animationSpec = spring(
@@ -535,114 +488,51 @@ private fun KidFriendlyCellView(
         label = "cellScale"
     )
 
-    // 颜色动画
-    val backgroundColor by animateColorAsState(
-        targetValue = when {
-            isWrong -> Color(0xFFFF5252)
-            isHighlighted -> Color(0xFFFFD54F)
-            hasCorrectClicks -> Color(0xFF69F0AE)
-            else -> Color(0xFF5C6BC0).copy(alpha = 0.6f)
-        },
-        animationSpec = tween(durationMillis = 200),
-        label = "cellColor"
-    )
-
     // 错误时的抖动
-    val shakeOffset by animateFloatAsState(
-        targetValue = if (isWrong) 8f else 0f,
+    val shakeOffsetX by animateFloatAsState(
+        targetValue = if (isWrong) 4f else 0f,
         animationSpec = keyframes {
             durationMillis = 300
             0f at 0
-            -8f at 75
-            8f at 150
-            -8f at 225
+            -4f at 75
+            4f at 150
+            -4f at 225
             0f at 300
         },
-        label = "shake"
+        label = "shakeX"
     )
 
-    // 是否可以点击
-    val canClick = isInputEnabled && !isWrong && !isHighlighted && !hasCorrectClicks
+    // 背景颜色
+    val backgroundColor = when {
+        isWrong -> Color(0xFFFF5252)
+        isHighlighted -> Color(0xFFFFD54F)
+        isCorrect -> Color(0xFF4CAF50)
+        else -> Color(0xFF5C6BC0)
+    }
 
     Box(
-        modifier = Modifier
-            .size(78.dp)
-            .offset(x = shakeOffset.dp)
-            .scale(scale)
-            .shadow(
-                elevation = if (isHighlighted) 16.dp else 8.dp,
-                shape = RoundedCornerShape(20.dp),
-                spotColor = when {
-                    isHighlighted -> Color(0xFFFFD54F)
-                    isWrong -> Color(0xFFFF5252)
-                    hasCorrectClicks -> Color(0xFF69F0AE)
-                    else -> Color(0xFF3F51B5)
-                }
-            )
-            .clip(RoundedCornerShape(20.dp))
-            .background(
-                brush = Brush.verticalGradient(
-                    colors = when {
-                        isWrong -> listOf(Color(0xFFFF5252), Color(0xFFD32F2F))
-                        isHighlighted -> listOf(Color(0xFFFFE082), Color(0xFFFFD54F))
-                        hasCorrectClicks -> listOf(Color(0xFF81C784), Color(0xFF4CAF50))
-                        else -> listOf(Color(0xFF7986CB), Color(0xFF5C6BC0))
-                    }
-                )
-            )
-            .then(
-                if (canClick) {
-                    Modifier.clickable(
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = null,
-                        onClick = onClick
-                    )
-                } else {
-                    Modifier
-                }
+        modifier = modifier
+            .aspectRatio(1f)
+            .shadow(elevation = if (isHighlighted) 8.dp else 4.dp, shape = RoundedCornerShape(12.dp))
+            .clip(RoundedCornerShape(12.dp))
+            .background(backgroundColor)
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
+                onClick = onClick
             ),
         contentAlignment = Alignment.Center
     ) {
-        // 根据状态显示不同图标
-        when {
-            isHighlighted -> {
-                // 灯塔发光效果
-                Text(
-                    text = "🏠",
-                    fontSize = 40.sp
-                )
-            }
-            isWrong -> {
-                // 错误标记
-                Text(
-                    text = "❌",
-                    fontSize = 36.sp
-                )
-            }
-            hasCorrectClicks -> {
-                // 正确标记
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text(
-                        text = "🏠",
-                        fontSize = 28.sp
-                    )
-                    Text(
-                        text = "✓",
-                        fontSize = 18.sp,
-                        color = Color.White,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-            }
-            else -> {
-                // 普通格子显示小房子
-                Text(
-                    text = "🏠",
-                    fontSize = 32.sp,
-                    color = Color.White.copy(alpha = 0.7f)
-                )
+        Box(
+            modifier = Modifier.offset(x = shakeOffsetX.dp)
+                .graphicsLayer(scaleX = scale, scaleY = scale),
+            contentAlignment = Alignment.Center
+        ) {
+            when {
+                isHighlighted -> Text("🏠", fontSize = 36.sp)
+                isWrong -> Text("❌", fontSize = 32.sp)
+                isCorrect -> Text("🏠", fontSize = 32.sp)
+                else -> Text("🏠", fontSize = 32.sp, color = Color.White.copy(alpha = 0.7f))
             }
         }
     }
@@ -673,8 +563,7 @@ private fun PausedScreen(
             onClick = onResume,
             modifier = Modifier.fillMaxWidth().height(60.dp),
             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50)),
-            shape = RoundedCornerShape(20.dp),
-            elevation = ButtonDefaults.buttonElevation(defaultElevation = 8.dp)
+            shape = RoundedCornerShape(20.dp)
         ) {
             Text("▶️ 继续", fontSize = 20.sp, fontWeight = FontWeight.Bold)
         }
@@ -699,7 +588,6 @@ private fun CompletedScreen(
     onRestart: () -> Unit,
     onBack: () -> Unit
 ) {
-    // 成功动画
     val successScale by animateFloatAsState(
         targetValue = if (state.isSuccess) 1f else 0f,
         animationSpec = spring(
@@ -716,7 +604,6 @@ private fun CompletedScreen(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        // 成功/失败大表情
         Text(
             text = if (state.isSuccess) "🎉" else "😢",
             fontSize = 80.sp,
@@ -724,7 +611,6 @@ private fun CompletedScreen(
         )
         Spacer(modifier = Modifier.height(16.dp))
 
-        // 文字
         Text(
             text = if (state.isSuccess) "太棒了！🎊" else "加油哦！💪",
             fontSize = 32.sp,
@@ -766,19 +652,11 @@ private fun CompletedScreen(
         // 失败后显示：重新播放提示 + 重玩按钮
         if (!state.isSuccess) {
             Card(
-                colors = CardDefaults.cardColors(
-                    containerColor = Color(0xFF42A5F5).copy(alpha = 0.3f)
-                ),
+                colors = CardDefaults.cardColors(containerColor = Color(0xFF42A5F5).copy(alpha = 0.3f)),
                 shape = RoundedCornerShape(16.dp)
             ) {
-                Row(
-                    modifier = Modifier.padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "💡",
-                        fontSize = 24.sp
-                    )
+                Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Text(text = "💡", fontSize = 24.sp)
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = "可以重新观看灯塔闪烁来帮助记忆",
@@ -793,21 +671,19 @@ private fun CompletedScreen(
                 onClick = onReplay,
                 modifier = Modifier.fillMaxWidth().height(56.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFD54F)),
-                shape = RoundedCornerShape(20.dp),
-                elevation = ButtonDefaults.buttonElevation(defaultElevation = 8.dp)
+                shape = RoundedCornerShape(20.dp)
             ) {
                 Text("🔄 重新观看灯塔", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color(0xFF5D4037))
             }
             Spacer(modifier = Modifier.height(12.dp))
         }
 
-        if (state.isSuccess && module.getLevelIndex() < 10) {
+        if (state.isSuccess && module.getLevelIndex() < 50) {
             Button(
                 onClick = { module.onUserAction(GameAction.NextLevel) },
                 modifier = Modifier.fillMaxWidth().height(60.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50)),
-                shape = RoundedCornerShape(20.dp),
-                elevation = ButtonDefaults.buttonElevation(defaultElevation = 8.dp)
+                shape = RoundedCornerShape(20.dp)
             ) {
                 Text("下一关 ➡️", fontSize = 20.sp, fontWeight = FontWeight.Bold)
             }
@@ -818,8 +694,7 @@ private fun CompletedScreen(
             onClick = onRestart,
             modifier = Modifier.fillMaxWidth().height(60.dp),
             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF7043)),
-            shape = RoundedCornerShape(20.dp),
-            elevation = ButtonDefaults.buttonElevation(defaultElevation = 8.dp)
+            shape = RoundedCornerShape(20.dp)
         ) {
             Text("🔄 重玩本关", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color.White)
         }
