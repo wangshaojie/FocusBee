@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -29,15 +28,11 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.animalgame.core.game.GameAction
 import com.animalgame.core.game.GameModule
 import com.animalgame.core.game.GameState
-import com.animalgame.ui.components.GameTopBar
-import com.animalgame.ui.components.DifficultyCard
-import com.animalgame.ui.components.DifficultyColors
 import kotlinx.coroutines.flow.collectLatest
 
 /**
@@ -52,25 +47,8 @@ fun MemoryGameUI(
     module: GameModule,
     onBack: () -> Unit
 ) {
-    // 转换为具体类型以访问扩展方法
-    val memoryModule = module as? MemoryGameModule
-
     // 收集状态
     val gameState by module.state.collectAsState()
-
-    // 处理返回逻辑：根据当前状态决定返回行为
-    val handleBack: () -> Unit = {
-        when (gameState) {
-            is GameState.Idle -> {
-                // 在关卡选择页面，直接退出
-                onBack()
-            }
-            else -> {
-                // 在游戏进行中或完成页面，返回到关卡选择
-                memoryModule?.resetToIdle() ?: module.onUserAction(GameAction.Quit)
-            }
-        }
-    }
 
     Box(
         modifier = Modifier
@@ -81,8 +59,11 @@ fun MemoryGameUI(
             is GameState.Idle -> {
                 // 关卡选择
                 LevelSelectScreen(
-                    module = memoryModule!!,
-                    onBack = handleBack
+                    totalLevels = module.totalLevels,
+                    onLevelSelect = { level ->
+                        module.start(level)
+                    },
+                    onBack = onBack
                 )
             }
 
@@ -93,20 +74,14 @@ fun MemoryGameUI(
 
             is GameState.Playing -> {
                 // 游戏进行中
-                // 获取难度信息
-                val difficultyName = memoryModule?.getCurrentDifficultyName()
-                val levelInDifficulty = memoryModule?.getCurrentLevelIndex() ?: state.level
-
                 PlayingScreen(
                     state = state,
-                    difficultyName = difficultyName,
-                    levelInDifficulty = levelInDifficulty,
                     onCardClick = { index ->
                         module.onUserAction(GameAction.TapIndex(index))
                     },
-                    onBack = handleBack,
+                    onBack = onBack,
                     onReset = {
-                        memoryModule?.restartCurrentLevel() ?: module.onUserAction(GameAction.Restart)
+                        module.onUserAction(GameAction.Restart)
                     }
                 )
             }
@@ -126,23 +101,16 @@ fun MemoryGameUI(
             }
 
             is GameState.Completed -> {
-                // 游戏完成 - 从 module 获取当前难度信息
-                val difficultyName = memoryModule?.getCurrentDifficultyName()
-                val levelInDifficulty = memoryModule?.getCurrentLevelIndex() ?: state.level
-                val isLastInDifficulty = memoryModule?.isDifficultyCompleted() ?: false
-
+                // 游戏完成
                 CompletedScreen(
                     state = state,
-                    difficultyName = difficultyName,
-                    levelInDifficulty = levelInDifficulty,
-                    isLastInDifficulty = isLastInDifficulty,
                     onNextLevel = {
-                        memoryModule?.nextLevel()
+                        module.onUserAction(GameAction.NextLevel)
                     },
                     onReplay = {
-                        memoryModule?.restartCurrentLevel() ?: module.onUserAction(GameAction.Restart)
+                        module.onUserAction(GameAction.Restart)
                     },
-                    onBack = handleBack
+                    onBack = onBack
                 )
             }
 
@@ -150,7 +118,7 @@ fun MemoryGameUI(
                 // 全部通关
                 AllCompletedScreen(
                     state = state,
-                    onBack = handleBack
+                    onBack = onBack
                 )
             }
         }
@@ -158,97 +126,157 @@ fun MemoryGameUI(
 }
 
 /**
- * 关卡选择屏幕 - 卡通风格
+ * 关卡选择屏幕 - 难度选择模式
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun LevelSelectScreen(
-    module: MemoryGameModule,
+    totalLevels: Int,
+    onLevelSelect: (Int) -> Unit,
     onBack: () -> Unit
 ) {
     Column(
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier
+            .fillMaxSize()
+            .background(
+                Brush.verticalGradient(
+                    colors = listOf(
+                        Color(0xFFFFB6C1),  // 浅粉色
+                        Color(0xFFFFE4B5),  // 浅橙色
+                        Color(0xFF98FB98),  // 浅绿色
+                        Color(0xFF87CEEB),  // 天蓝色
+                    )
+                )
+            )
+            .padding(24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        GameTopBar(
-            title = "🃏 记忆翻牌",
-            level = 0,
-            score = 0,
-            stars = 0,
-            onBack = onBack
-        )
-
-        // 说明文字
+        // 顶部标题
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(24.dp),
+            modifier = Modifier.fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            Spacer(modifier = Modifier.height(16.dp))
             Text(
-                "记住卡片的位置！",
-                fontSize = 16.sp,
-                color = Color(0xFF5D4037),
-                textAlign = TextAlign.Center
+                text = "🃏 记忆翻牌",
+                fontSize = 28.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF5D4037)
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                "找出相同的卡片配对",
+                text = "找出相同的配对，训练记忆力！",
                 fontSize = 14.sp,
-                color = Color(0xFF8D6E63),
-                textAlign = TextAlign.Center
+                color = Color(0xFF8D6E63)
             )
         }
 
+        Spacer(modifier = Modifier.height(24.dp))
+
         // 难度选择卡片
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 24.dp),
+            modifier = Modifier.weight(1f),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            DifficultyCard(
-                emoji = "🌟",
-                title = "简单",
-                subtitle = "3×4网格 · 6对卡片",
-                color = DifficultyColors.EasyColor,
-                onClick = {
-                    module.setDifficulty(MemoryGameModule.Difficulty.EASY)
-                    module.start(1)
-                }
+            Text(
+                text = "选择难度",
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF5D4037)
             )
 
+            // 简单 - 3x4 网格
             DifficultyCard(
-                emoji = "⭐",
-                title = "中等",
-                subtitle = "4×4网格 · 8对卡片",
-                color = DifficultyColors.MediumColor,
-                onClick = {
-                    module.setDifficulty(MemoryGameModule.Difficulty.MEDIUM)
-                    module.start(1)
-                }
+                emoji = "🌱",
+                title = "简单 (1-50关)",
+                subtitle = "3×4 网格，6对卡片",
+                color = Color(0xFF4CAF50),
+                onClick = { onLevelSelect(1) }
             )
 
+            // 中等 - 4x4 网格
+            DifficultyCard(
+                emoji = "🌿",
+                title = "中等 (51-100关)",
+                subtitle = "4×4 网格，8对卡片",
+                color = Color(0xFF2196F3),
+                onClick = { onLevelSelect(51) }
+            )
+
+            // 困难 - 4x5 网格
+            DifficultyCard(
+                emoji = "🌳",
+                title = "困难 (101-150关)",
+                subtitle = "4×5 网格，10对卡片",
+                color = Color(0xFFFF9800),
+                onClick = { onLevelSelect(101) }
+            )
+
+            // 挑战 - 5x6 网格
             DifficultyCard(
                 emoji = "🏆",
-                title = "困难",
-                subtitle = "4×5网格 · 10对卡片",
-                color = DifficultyColors.HardColor,
-                onClick = {
-                    module.setDifficulty(MemoryGameModule.Difficulty.HARD)
-                    module.start(1)
-                }
+                title = "挑战 (151-200关)",
+                subtitle = "5×6 网格，15对卡片",
+                color = Color(0xFFF44336),
+                onClick = { onLevelSelect(151) }
             )
+        }
 
-            DifficultyCard(
-                emoji = "💎",
-                title = "挑战",
-                subtitle = "5×6网格 · 15对卡片",
-                color = DifficultyColors.ExpertColor,
-                onClick = {
-                    module.setDifficulty(MemoryGameModule.Difficulty.EXPERT)
-                    module.start(1)
-                }
-            )
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // 返回按钮
+        OutlinedButton(
+            onClick = onBack,
+            modifier = Modifier.fillMaxWidth().height(56.dp),
+            colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF5D4037)),
+            shape = RoundedCornerShape(16.dp)
+        ) {
+            Text("返回主页", fontSize = 18.sp)
+        }
+    }
+}
+
+/**
+ * 难度选择卡片
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun DifficultyCard(
+    emoji: String,
+    title: String,
+    subtitle: String,
+    color: Color,
+    onClick: () -> Unit
+) {
+    Card(
+        onClick = onClick,
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(80.dp),
+        colors = CardDefaults.cardColors(containerColor = color.copy(alpha = 0.9f)),
+        shape = RoundedCornerShape(16.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 20.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(text = emoji, fontSize = 36.sp)
+            Spacer(modifier = Modifier.width(16.dp))
+            Column {
+                Text(
+                    text = title,
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
+                Text(
+                    text = subtitle,
+                    fontSize = 14.sp,
+                    color = Color.White.copy(alpha = 0.85f)
+                )
+            }
         }
     }
 }
@@ -277,8 +305,6 @@ private fun ReadyScreen(countdown: Int) {
 @Composable
 private fun PlayingScreen(
     state: GameState.Playing,
-    difficultyName: String?,
-    levelInDifficulty: Int,
     onCardClick: (Int) -> Unit,
     onBack: () -> Unit,
     onReset: () -> Unit = {}
@@ -323,16 +349,97 @@ private fun PlayingScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(backgroundColor)
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // 统一顶部导航栏
-        GameTopBar(
-            title = "记忆翻牌",
-            level = levelInDifficulty,
-            difficultyName = difficultyName,
-            score = state.score,
-            stars = calculateStars(state.score, totalPairs),
-            onBack = onBack
-        )
+        // 顶部信息栏
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(containerColor = Color.White),
+            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+            shape = RoundedCornerShape(16.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(12.dp)
+            ) {
+                // 第一行：关卡和重置按钮
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "第 ${state.level} 关",
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF5C6BC0)
+                    )
+
+                    // 重置按钮
+                    IconButton(
+                        onClick = onReset,
+                        modifier = Modifier
+                            .size(36.dp)
+                            .background(primaryColor.copy(alpha = 0.2f), CircleShape)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Refresh,
+                            contentDescription = "重置",
+                            tint = Color(0xFF5C6BC0),
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(6.dp))
+
+                // 第二行：步数、星级、进度
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // 步数
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .background(secondaryColor.copy(alpha = 0.2f), RoundedCornerShape(8.dp))
+                            .padding(horizontal = 8.dp, vertical = 4.dp)
+                    ) {
+                        Text(text = "🔄", fontSize = 12.sp)
+                        Spacer(modifier = Modifier.width(2.dp))
+                        Text(text = "$flipCount", fontSize = 12.sp, fontWeight = FontWeight.Medium, color = Color(0xFF5D4037))
+                    }
+
+                    // 星级
+                    val stars = calculateStars(state.score, totalPairs)
+                    Row {
+                        repeat(3) { index ->
+                            Icon(
+                                imageVector = if (index < stars) Icons.Filled.Star else Icons.Outlined.StarOutline,
+                                contentDescription = null,
+                                tint = if (index < stars) Color(0xFFFFD54F) else Color(0xFFE0E0E0),
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+                    }
+
+                    // 进度
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .background(accentColor.copy(alpha = 0.2f), RoundedCornerShape(8.dp))
+                            .padding(horizontal = 8.dp, vertical = 4.dp)
+                    ) {
+                        Text(text = "✨", fontSize = 12.sp)
+                        Spacer(modifier = Modifier.width(2.dp))
+                        Text(text = "$matchedPairs/$totalPairs", fontSize = 12.sp, fontWeight = FontWeight.Medium, color = Color(0xFF2E7D32))
+                    }
+                }
+            }
+        }
 
         // 空白区域，使用权重让游戏区域居中
         Spacer(modifier = Modifier.height(12.dp))
@@ -366,8 +473,8 @@ private fun PlayingScreen(
                     if (cards.isNotEmpty()) {
                         LazyVerticalGrid(
                             columns = GridCells.Fixed(columns),
-                            horizontalArrangement = Arrangement.spacedBy(10.dp),
-                            verticalArrangement = Arrangement.spacedBy(10.dp),
+                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                            verticalArrangement = Arrangement.spacedBy(4.dp),
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             itemsIndexed(cards) { index, card ->
@@ -389,9 +496,9 @@ private fun PlayingScreen(
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        // 重置按钮
+        // 返回按钮
         OutlinedButton(
-            onClick = onReset,
+            onClick = onBack,
             modifier = Modifier
                 .fillMaxWidth()
                 .height(44.dp),
@@ -401,7 +508,7 @@ private fun PlayingScreen(
             ),
             shape = RoundedCornerShape(16.dp)
         ) {
-            Text("重置本关", fontSize = 16.sp)
+            Text("返回主页", fontSize = 16.sp)
         }
     }
 }
@@ -410,14 +517,11 @@ private fun PlayingScreen(
  * 计算星级
  */
 private fun calculateStars(score: Int, totalPairs: Int): Int {
-    // 由于UI无法直接获取错误次数，我们通过分数来估算
-    // 每对正确配对得10分，所以总分为 totalPairs * 10
-    // 无错误时分数应该接近满分，少量错误时分数会略低
-    val maxScore = totalPairs * 10
     return when {
-        score >= maxScore -> 3  // 无错误
-        score >= maxScore - 20 -> 2  // 少量错误（<=2）
-        else -> 1  // 多错误
+        score >= totalPairs * 100 -> 3
+        score >= totalPairs * 50 -> 2
+        score >= totalPairs * 20 -> 1
+        else -> 0
     }
 }
 
@@ -619,9 +723,6 @@ private fun PausedScreen(
 @Composable
 private fun CompletedScreen(
     state: GameState.Completed,
-    difficultyName: String?,
-    levelInDifficulty: Int,
-    isLastInDifficulty: Boolean,
     onNextLevel: () -> Unit,
     onReplay: () -> Unit,
     onBack: () -> Unit
@@ -654,25 +755,17 @@ private fun CompletedScreen(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // 下一关按钮 - 只在当前难度未完成时显示
-        if (!isLastInDifficulty) {
-            Button(
-                onClick = onNextLevel,
-                modifier = Modifier.fillMaxWidth().height(56.dp)
-            ) {
-                Text("下一关", fontSize = 18.sp)
-            }
-            Spacer(modifier = Modifier.height(12.dp))
-        } else {
-            // 当前难度已完成，提示用户
-            Text(
-                text = "🎉 ${difficultyName}难度已全部通关！",
-                fontSize = 16.sp,
-                color = Color(0xFF4CAF50),
-                fontWeight = FontWeight.Medium
-            )
-            Spacer(modifier = Modifier.height(16.dp))
+        // 显示额外数据
+        val extraData = (state as? GameState.Completed)?.let { null } ?: state
+
+        Button(
+            onClick = onNextLevel,
+            modifier = Modifier.fillMaxWidth().height(56.dp)
+        ) {
+            Text("下一关", fontSize = 18.sp)
         }
+
+        Spacer(modifier = Modifier.height(12.dp))
 
         Button(
             onClick = onReplay,

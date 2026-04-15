@@ -414,11 +414,7 @@ private fun PlayingContent(
             level = displayLevel,
             difficultyName = difficultyName,
             score = score,
-            stars = when {
-                score >= 100 -> 3
-                score >= 50 -> 2
-                else -> 1
-            },
+            stars = score.coerceIn(0, 3),
             onBack = onBack
         )
 
@@ -540,7 +536,6 @@ private fun PlayingContent(
                                 number = number,
                                 isCorrect = isCorrect,
                                 isWrong = isWrong,
-                                isNextNumber = number == currentNumber,
                                 onClick = { onNumberClick(number) }
                             )
                         }
@@ -578,7 +573,6 @@ private fun KidFriendlyNumberCell(
     number: Int,
     isCorrect: Boolean,
     isWrong: Boolean,
-    isNextNumber: Boolean,
     onClick: () -> Unit
 ) {
     // 点击动画
@@ -609,11 +603,12 @@ private fun KidFriendlyNumberCell(
         label = "shake"
     )
 
+    // 背景颜色：只有正确（绿色）和错误（红色）两种高亮状态
+    // 不提前高亮下一目标数字
     val backgroundColor by animateColorAsState(
         targetValue = when {
             isWrong -> Color(0xFFFF5252)
             isCorrect -> Color(0xFF69F0AE)
-            isNextNumber -> Color(0xFFFFE082)
             else -> Color.White
         },
         animationSpec = tween(200),
@@ -623,7 +618,6 @@ private fun KidFriendlyNumberCell(
     val textColor = when {
         isWrong -> Color.White
         isCorrect -> Color.White
-        isNextNumber -> Color(0xFFFF6F00)
         else -> Color(0xFF5C6BC0)
     }
 
@@ -633,57 +627,52 @@ private fun KidFriendlyNumberCell(
         else -> 42.sp
     }
 
-    Card(
+    // 使用 Box 代替 Card，避免 Card 的白色背景覆盖 backgroundColor
+    Box(
         modifier = Modifier
             .aspectRatio(1f)
             .fillMaxWidth(0.85f)
             .offset(x = shakeOffset.dp)
             .scale(scale)
             .shadow(
-                elevation = if (isCorrect || isNextNumber) 12.dp else 6.dp,
+                elevation = if (isCorrect || isWrong) 12.dp else 6.dp,
                 shape = RoundedCornerShape(16.dp),
                 spotColor = when {
                     isCorrect -> Color(0xFF69F0AE)
-                    isNextNumber -> Color(0xFFFFD54F)
+                    isWrong -> Color(0xFFFF5252)
                     else -> Color(0xFF5C6BC0)
                 }
             )
             .clip(RoundedCornerShape(16.dp))
             .background(backgroundColor)
             .clickable(onClick = onClick),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-        shape = RoundedCornerShape(16.dp)
+        contentAlignment = Alignment.Center
     ) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            when {
-                isCorrect -> {
-                    Text(
-                        text = "✓",
-                        fontSize = fontSize,
-                        fontWeight = FontWeight.Bold,
-                        color = textColor
-                    )
-                }
-                isWrong -> {
-                    Text(
-                        text = "✗",
-                        fontSize = fontSize,
-                        fontWeight = FontWeight.Bold,
-                        color = textColor
-                    )
-                }
-                else -> {
-                    Text(
-                        text = number.toString(),
-                        fontSize = fontSize,
-                        fontWeight = FontWeight.Bold,
-                        color = textColor,
-                        textAlign = TextAlign.Center
-                    )
-                }
+        when {
+            isCorrect -> {
+                Text(
+                    text = "✓",
+                    fontSize = fontSize,
+                    fontWeight = FontWeight.Bold,
+                    color = textColor
+                )
+            }
+            isWrong -> {
+                Text(
+                    text = "✗",
+                    fontSize = fontSize,
+                    fontWeight = FontWeight.Bold,
+                    color = textColor
+                )
+            }
+            else -> {
+                Text(
+                    text = number.toString(),
+                    fontSize = fontSize,
+                    fontWeight = FontWeight.Bold,
+                    color = textColor,
+                    textAlign = TextAlign.Center
+                )
             }
         }
     }

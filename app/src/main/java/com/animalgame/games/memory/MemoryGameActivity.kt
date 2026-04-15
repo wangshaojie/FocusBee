@@ -10,6 +10,8 @@ import androidx.compose.runtime.remember
 import androidx.lifecycle.lifecycleScope
 import com.animalgame.core.manager.ScoreManager
 import com.animalgame.core.model.GameResult
+import com.umeng.analytics.MobclickAgent
+import com.animalgame.utils.UMengAnalyticsHelper
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -30,6 +32,11 @@ class MemoryGameActivity : AppCompatActivity() {
         setContent {
             val scoreManager = remember { ScoreManager.getInstance(this@MemoryGameActivity) }
             val module = remember { MemoryGameModule() }
+            
+            // 统计游戏开始
+            LaunchedEffect(Unit) {
+                UMengAnalyticsHelper.trackGameStart(this@MemoryGameActivity, "memory_game", 1)
+            }
 
             // 收集结果并保存
             LaunchedEffect(Unit) {
@@ -46,6 +53,13 @@ class MemoryGameActivity : AppCompatActivity() {
                             mistakes = it.mistakes
                         )
                         scoreManager.reportResult(modelResult)
+                        
+                        // 统计游戏完成
+                        if (it.isSuccess) {
+                            UMengAnalyticsHelper.trackGameComplete(this@MemoryGameActivity, "memory_game", it.level, it.score, it.timeMillis)
+                        } else {
+                            UMengAnalyticsHelper.trackGameQuit(this@MemoryGameActivity, "memory_game", it.level, 50) // 假设50%进度
+                        }
                     }
                 }
             }
@@ -109,8 +123,14 @@ class MemoryGameActivity : AppCompatActivity() {
         }
     }
 
+    override fun onResume() {
+        super.onResume()
+        MobclickAgent.onResume(this)
+    }
+
     override fun onPause() {
         super.onPause()
+        MobclickAgent.onPause(this)
         mediaPlayer?.pause()
     }
 

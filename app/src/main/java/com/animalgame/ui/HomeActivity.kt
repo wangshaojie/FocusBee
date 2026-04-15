@@ -15,6 +15,11 @@ import com.animalgame.games.colorburst.registerColorBurstGame
 import com.animalgame.games.mirrordraw.registerMirrorDrawGame
 import com.animalgame.games.lighthouse.registerLighthousePathGame
 import com.animalgame.games.summatch.registerSumMatchGame
+import com.animalgame.games.quickquiz.registerQuickQuizGame
+import com.animalgame.games.wordchain.registerWordChainGame
+import com.animalgame.games.minispeech.registerMiniSpeechGame
+import com.umeng.analytics.MobclickAgent
+import com.animalgame.utils.UMengAnalyticsHelper
 import kotlinx.coroutines.launch
 
 class HomeActivity : AppCompatActivity() {
@@ -72,10 +77,14 @@ class HomeActivity : AppCompatActivity() {
         registerMirrorDrawGame()
         registerLighthousePathGame()
         registerSumMatchGame()
+        registerQuickQuizGame()
+        registerWordChainGame()
+        registerMiniSpeechGame()
     }
 
     override fun onResume() {
         super.onResume()
+        MobclickAgent.onResume(this)
         if (isMusicEnabled) {
             playBackgroundMusic()
         }
@@ -83,6 +92,7 @@ class HomeActivity : AppCompatActivity() {
 
     override fun onPause() {
         super.onPause()
+        MobclickAgent.onPause(this)
         stopBackgroundMusic()
     }
 

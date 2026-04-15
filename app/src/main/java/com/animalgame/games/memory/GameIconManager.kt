@@ -54,7 +54,7 @@ object GameIconManager {
         GameIcon("pizza", com.animalgame.R.drawable.ic_icon_pizza, IconCategory.FOOD)
     )
 
-    // 交通图标 (5个)
+    // 交通图标 (6个)
     val transports = listOf(
         GameIcon("car", com.animalgame.R.drawable.ic_icon_car, IconCategory.TRANSPORT),
         GameIcon("airplane", com.animalgame.R.drawable.ic_icon_airplane, IconCategory.TRANSPORT),
@@ -72,7 +72,7 @@ object GameIconManager {
         GameIcon("moon", com.animalgame.R.drawable.ic_icon_moon, IconCategory.SYMBOL)
     )
 
-    // 物品图标 (2个)
+    // 物品图标 (5个)
     val objects = listOf(
         GameIcon("book", com.animalgame.R.drawable.ic_icon_book, IconCategory.OBJECT),
         GameIcon("ball", com.animalgame.R.drawable.ic_icon_ball, IconCategory.OBJECT)

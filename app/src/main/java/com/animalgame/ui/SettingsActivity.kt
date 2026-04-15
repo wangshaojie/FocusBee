@@ -7,6 +7,8 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.animalgame.R
 import com.animalgame.databinding.ActivitySettingsBinding
+import com.umeng.analytics.MobclickAgent
+import com.animalgame.utils.UMengAnalyticsHelper
 
 class SettingsActivity : AppCompatActivity() {
 
@@ -63,7 +65,22 @@ class SettingsActivity : AppCompatActivity() {
             apply()
         }
 
+        // 统计设置变更
+        UMengAnalyticsHelper.trackSettingsChange(this, "refresh_interval", interval.toString())
+        UMengAnalyticsHelper.trackSettingsChange(this, "auto_refresh", binding.autoRefreshSwitch.isChecked.toString())
+        UMengAnalyticsHelper.trackButtonClick(this, "save_button", "settings_screen")
+
         Toast.makeText(this, "设置已保存", Toast.LENGTH_SHORT).show()
         finish()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        MobclickAgent.onResume(this)
+    }
+
+    override fun onPause() {
+        super.onPause()
+        MobclickAgent.onPause(this)
     }
 }

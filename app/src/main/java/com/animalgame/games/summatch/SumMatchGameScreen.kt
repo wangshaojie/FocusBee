@@ -324,15 +324,17 @@ private fun PlayingScreen(
                 .padding(horizontal = 4.dp, vertical = 4.dp),
             contentAlignment = Alignment.Center
         ) {
-            // 根据节点数量计算圆圈大小
+            // 根据节点数量计算方块大小（矩阵风格）
             val circleSize = when {
-                nodes.size <= 6 -> 90.dp
-                nodes.size <= 9 -> 80.dp
-                nodes.size <= 12 -> 70.dp
-                else -> 62.dp
+                nodes.size <= 4 -> 80.dp
+                nodes.size <= 6 -> 75.dp
+                nodes.size <= 9 -> 68.dp
+                nodes.size <= 12 -> 60.dp
+                nodes.size <= 16 -> 55.dp
+                else -> 50.dp
             }
 
-            // 绘制所有圆圈
+            // 绘制所有方块
             nodes.forEach { node ->
                 KidFriendlyNumberCircle(
                     node = node,
@@ -343,15 +345,19 @@ private fun PlayingScreen(
             }
         }
 
-        // 清空按钮 - 儿童友好样式
-        if (selectedCount > 0 && currentPhase == GamePhase.SELECTING) {
+        // 清空按钮 - 始终显示
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 16.dp),
+            contentAlignment = Alignment.Center
+        ) {
             Button(
                 onClick = { module.clearSelection() },
-                modifier = Modifier
-                    .align(Alignment.CenterHorizontally)
-                    .padding(bottom = 16.dp),
+                enabled = selectedCount > 0 && currentPhase == GamePhase.SELECTING,
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFFFF7043)
+                    containerColor = Color(0xFFFF7043),
+                    disabledContainerColor = Color(0xFFBDBDBD)
                 ),
                 shape = RoundedCornerShape(25.dp),
                 contentPadding = PaddingValues(horizontal = 32.dp, vertical = 12.dp),
@@ -371,7 +377,7 @@ private fun PlayingScreen(
     }
 }
 
-// ==================== 儿童友好数字圆圈 ====================
+// ==================== 矩阵风格数字方块 ====================
 
 @Composable
 private fun KidFriendlyNumberCircle(
@@ -380,27 +386,12 @@ private fun KidFriendlyNumberCircle(
     isInputEnabled: Boolean,
     onClick: () -> Unit
 ) {
-    // 浮动动画 - 更明显
-    val floatAnim = rememberInfiniteTransition(label = "float")
-    val floatOffset by floatAnim.animateFloat(
-        initialValue = -6f,
-        targetValue = 6f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(
-                durationMillis = 1200 + (node.id % 5) * 150,
-                easing = FastOutSlowInEasing
-            ),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "floatOffset"
-    )
-
-    // 选中/错误时的弹跳动画
+    // 选中/错误时的缩放动画
     val scale by animateFloatAsState(
         targetValue = when {
             node.isMatched -> 0f
-            node.isWrong -> 1.2f
-            node.isSelected -> 1.15f
+            node.isWrong -> 1.05f
+            node.isSelected -> 1.08f
             else -> 1f
         },
         animationSpec = spring(
@@ -422,23 +413,24 @@ private fun KidFriendlyNumberCircle(
 
     // 错误时的抖动动画
     val shakeOffset by animateFloatAsState(
-        targetValue = if (node.isWrong) 10f else 0f,
+        targetValue = if (node.isWrong) 6f else 0f,
         animationSpec = keyframes {
-            durationMillis = 300
+            durationMillis = 200
             0f at 0
-            -10f at 75
-            10f at 150
-            -10f at 225
-            0f at 300
+            -6f at 50
+            6f at 100
+            -6f at 150
+            0f at 200
         },
         label = "shake"
     )
 
-    // 根据数字值选择不同的彩虹颜色
-    val gradientColors = when {
-        node.isWrong -> listOf(Color(0xFFFF6B6B), Color(0xFFFF5252))
-        node.isSelected -> listOf(Color(0xFFFFD54F), Color(0xFFFFC107))
-        else -> getNumberGradientColors(node.value)
+    // 根据数字值选择不同的颜色（矩阵风格：纯色背景）
+    // 选中状态用橙色，避免和绿色数字冲突
+    val backgroundColor = when {
+        node.isWrong -> Color(0xFFFF5252)
+        node.isSelected -> Color(0xFFFF9800)  // 橙色突出选中状态
+        else -> getNumberSolidColor(node.value)
     }
 
     // 跳过已消除
@@ -454,20 +446,18 @@ private fun KidFriendlyNumberCircle(
             modifier = Modifier
                 .offset(
                     x = ((node.x - 0.5f) * 340).dp + shakeOffset.dp,
-                    y = ((node.y - 0.5f) * 400).dp + floatOffset.dp
+                    y = ((node.y - 0.5f) * 400).dp
                 )
                 .size(circleSize)
                 .alpha(alpha)
                 .scale(scale)
                 .shadow(
-                    elevation = if (node.isSelected) 16.dp else 8.dp,
-                    shape = CircleShape,
-                    spotColor = if (node.isSelected) Color(0xFFFF9800) else Color(0xFF666666)
+                    elevation = if (node.isSelected) 12.dp else 6.dp,
+                    shape = RoundedCornerShape(12.dp),
+                    spotColor = if (node.isSelected) Color(0xFFFF9800) else Color(0x40000000)
                 )
-                .clip(CircleShape)
-                .background(
-                    brush = Brush.verticalGradient(gradientColors)
-                )
+                .clip(RoundedCornerShape(12.dp))
+                .background(backgroundColor)
                 .then(
                     if (isInputEnabled && !node.isMatched) {
                         Modifier.clickable(
@@ -484,7 +474,7 @@ private fun KidFriendlyNumberCircle(
             // 数字
             Text(
                 text = node.value.toString(),
-                fontSize = (circleSize.value / 2.2f).sp,
+                fontSize = (circleSize.value / 2.5f).sp,
                 fontWeight = FontWeight.Bold,
                 color = Color.White
             )
@@ -492,16 +482,20 @@ private fun KidFriendlyNumberCircle(
     }
 }
 
-// 根据数字值获取彩虹颜色
-private fun getNumberGradientColors(value: Int): List<Color> {
-    return when (value % 7) {
-        0 -> listOf(Color(0xFFFF6B6B), Color(0xFFFF5252))  // 红色
-        1 -> listOf(Color(0xFFFFB74D), Color(0xFFFFA726))  // 橙色
-        2 -> listOf(Color(0xFFFFF176), Color(0xFFFFEE58))  // 黄色
-        3 -> listOf(Color(0xFF81C784), Color(0xFF66BB6A))  // 绿色
-        4 -> listOf(Color(0xFF4FC3F7), Color(0xFF29B6F6))  // 蓝色
-        5 -> listOf(Color(0xFF9575CD), Color(0xFF7E57C2))  // 紫色
-        else -> listOf(Color(0xFFF06292), Color(0xFFEC407A))  // 粉色
+// 矩阵风格纯色配色
+private fun getNumberSolidColor(value: Int): Color {
+    return when (value % 10) {
+        0 -> Color(0xFFE53935)   // 红色
+        1 -> Color(0xFFD81B60)   // 粉红
+        2 -> Color(0xFF8E24AA)   // 紫色
+        3 -> Color(0xFF5E35B1)   // 深紫
+        4 -> Color(0xFF3949AB)   // 靛蓝
+        5 -> Color(0xFF1E88E5)   // 蓝色
+        6 -> Color(0xFF00ACC1)   // 青色
+        7 -> Color(0xFF00897B)   // 蓝绿
+        8 -> Color(0xFF43A047)   // 绿色
+        9 -> Color(0xFFFDD835)   // 黄色
+        else -> Color(0xFF757575) // 灰色
     }
 }
 

@@ -1,13 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+
     <application
+        android:name=".AnimalGameApplication"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/Theme.AnimalSoundGame">
+
+        <!-- UMeng AppKey -->
+        <meta-data
+            android:name="UMENG_APPKEY"
+            android:value="69cf821c9a7f376488b3e1a2" />
+
         <activity
             android:name=".ui.HomeActivity"
             android:exported="true">
@@ -18,9 +30,6 @@
         </activity>
         <activity
             android:name=".games.animal.AnimalGameActivity"
-            android:exported="false" />
-        <activity
-            android:name=".games.schulte.SchulteGameActivity"
             android:exported="false" />
         <activity
             android:name=".games.schulte.SchulteComposeActivity"

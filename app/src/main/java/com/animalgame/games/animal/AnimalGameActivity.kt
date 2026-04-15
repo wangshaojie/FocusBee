@@ -22,6 +22,8 @@ import com.animalgame.R
 import com.animalgame.core.manager.SettingsManager
 import com.animalgame.databinding.ActivityAnimalGameBinding
 import com.animalgame.ui.SettingsActivity
+import com.umeng.analytics.MobclickAgent
+import com.animalgame.utils.UMengAnalyticsHelper
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
@@ -117,12 +119,14 @@ class AnimalGameActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
+        MobclickAgent.onResume(this)
         playBackgroundMusic()
         loadSettings()
     }
 
     override fun onPause() {
         super.onPause()
+        MobclickAgent.onPause(this)
         mediaPlayer?.pause()
     }
 
@@ -180,6 +184,10 @@ class AnimalGameActivity : AppCompatActivity() {
         isGameStarted = true
         binding.startScreenContainer.visibility = View.GONE
         binding.countdownText.visibility = View.VISIBLE
+        
+        // 统计游戏开始
+        UMengAnalyticsHelper.trackGameStart(this, "animal_game", 1)
+        UMengAnalyticsHelper.trackButtonClick(this, "start_button", "animal_game_screen")
 
         startCountdown()
     }

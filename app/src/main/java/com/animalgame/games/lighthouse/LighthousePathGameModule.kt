@@ -312,10 +312,9 @@ class LighthousePathGameModule : AbstractGameModule() {
         }
 
         if (index == expectedIndex) {
-            // 正确
-            playerInput.add(index)
-            // 将点击的格子状态设置为 CORRECT
+            // 正确 - 显示点亮效果
             cellStates[index] = CellState.CORRECT
+            playerInput.add(index)
             updatePlayingState()
 
             // 检查是否完成
@@ -325,12 +324,18 @@ class LighthousePathGameModule : AbstractGameModule() {
 
             return ActionResult.Success
         } else {
-            // 错误
+            // 错误 - 显示红色闪烁效果，然后恢复继续游戏
             wrongCellIndex = index
             mistakeCount++
             updatePlayingState()
 
-            handleFailure()
+            // 延迟500ms后清除错误状态，让玩家看到红色闪烁
+            gameScope.launch {
+                delay(500)
+                wrongCellIndex = -1
+                updatePlayingState()
+            }
+
             return ActionResult.Error("点错了", shake = true)
         }
     }
@@ -433,6 +438,8 @@ class LighthousePathGameModule : AbstractGameModule() {
         stopTimer()
         sequenceJob?.cancel()
         sequenceJob = null
+        wrongCellIndex = -1
+        cellStates = Array(GRID_SIZE) { CellState.NORMAL }
         _state.value = GameState.Idle
     }
 

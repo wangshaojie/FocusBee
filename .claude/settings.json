@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(unzip -o app/libs/umeng-common-9.9.1.aar -d /tmp/umeng_common)",
+      "Bash(unzip -p app/libs/umeng-abtest-v1.0.1.aar AndroidManifest.xml)",
+      "Bash(./gradlew assembleRelease --refresh-dependencies)"
+    ]
+  }
+}

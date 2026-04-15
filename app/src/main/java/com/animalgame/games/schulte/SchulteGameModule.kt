@@ -150,12 +150,13 @@ class SchulteGameModule : AbstractGameModule() {
                         // 游戏完成
                         stopTimer()
                         val stars = calculateStars(currentState.elapsedTime, mistakes, getFullLevel())
-                        _state.value = GameState.Completed(
-                            level = getFullLevel(),
-                            score = currentState.score,
-                            stars = stars,
+                        // 积分系统：1星=1分，2星=2分，3星=3分
+                        val finalScore = stars
+                        completeLevel(
+                            isSuccess = true,
                             timeMillis = currentState.elapsedTime,
-                            isSuccess = true
+                            score = finalScore,
+                            stars = stars
                         )
                     } else {
                         // 继续游戏
@@ -171,12 +172,9 @@ class SchulteGameModule : AbstractGameModule() {
                     clickedNumbers[tappedNumber] = false
 
                     val newMistakes = mistakes + 1
-                    val newScore = maxOf(0, 100 - newMistakes * 10)
                     _state.value = currentState.copy(
-                        score = newScore,
                         data = currentState.data.toMutableMap().apply {
                             put("mistakes", newMistakes)
-                            put("score", newScore)
                             put("clickedNumbers", clickedNumbers)
                             put("wrongNumber", tappedNumber)
                         }

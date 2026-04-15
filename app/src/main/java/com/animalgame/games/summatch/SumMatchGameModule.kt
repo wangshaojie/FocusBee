@@ -87,7 +87,7 @@ class SumMatchGameModule : AbstractGameModule() {
     private fun getLevelConfig(level: Int): LevelConfig {
         return when {
             level <= 5 -> LevelConfig(
-                nodeCount = 6 + level,
+                nodeCount = (6 + level).coerceAtMost(10),
                 targetMin = 5 + level,
                 targetMax = 10 + level * 2,
                 minSolutionSize = 2,
@@ -97,7 +97,7 @@ class SumMatchGameModule : AbstractGameModule() {
                 timePenalty = 2000L
             )
             level <= 10 -> LevelConfig(
-                nodeCount = 8 + level,
+                nodeCount = (8 + level).coerceAtMost(12),
                 targetMin = 10 + level,
                 targetMax = 15 + level * 2,
                 minSolutionSize = 2,
@@ -107,7 +107,7 @@ class SumMatchGameModule : AbstractGameModule() {
                 timePenalty = 3000L
             )
             level <= 20 -> LevelConfig(
-                nodeCount = 10 + level,
+                nodeCount = (10 + level).coerceAtMost(16),
                 targetMin = 15 + level,
                 targetMax = 20 + level * 2,
                 minSolutionSize = 2,
@@ -117,7 +117,7 @@ class SumMatchGameModule : AbstractGameModule() {
                 timePenalty = 3000L
             )
             else -> LevelConfig(
-                nodeCount = 12 + level,
+                nodeCount = (12 + level).coerceAtMost(20),
                 targetMin = 20 + level,
                 targetMax = 25 + level * 2,
                 minSolutionSize = 3,
@@ -369,59 +369,33 @@ class SumMatchGameModule : AbstractGameModule() {
     }
 
     /**
-     * 防重叠的散点分布算法
+     * 网格分布算法
      */
     private fun generateScatteredPositions(count: Int): List<Pair<Float, Float>> {
         val positions = mutableListOf<Pair<Float, Float>>()
-        val padding = 0.12f  // 边距
-        val minDistance = 0.18f  // 最小间距（相对于容器尺寸）
-        val maxAttempts = 100  // 最大尝试次数
+        val padding = 0.1f
 
-        // 根据数量调整
-        val adjustedMinDistance = when {
-            count <= 6 -> 0.22f
-            count <= 9 -> 0.18f
-            count <= 12 -> 0.15f
-            else -> 0.13f
+        // 计算行列数（数字少时也用较多列，保持间隙）
+        val cols = when {
+            count <= 4 -> 2
+            count <= 9 -> 3
+            count <= 16 -> 4
+            else -> 5
         }
+        val rows = (count + cols - 1) / cols
 
         for (i in 0 until count) {
-            var attempts = 0
-            var validPosition = false
+            val row = i / cols
+            val col = i % cols
 
-            while (!validPosition && attempts < maxAttempts) {
-                attempts++
+            // 计算网格中心点
+            val cellWidth = (1f - padding * 2) / cols
+            val cellHeight = (1f - padding * 2) / rows
 
-                // 在安全区域内随机生成位置
-                val x = Random.nextFloat() * (1f - padding * 2) + padding
-                val y = Random.nextFloat() * (1f - padding * 2) + padding
+            val x = padding + col * cellWidth + cellWidth / 2
+            val y = padding + row * cellHeight + cellHeight / 2
 
-                // 检查与所有现有位置的距离
-                var tooClose = false
-                for (existing in positions) {
-                    val dx = x - existing.first
-                    val dy = y - existing.second
-                    val distance = kotlin.math.sqrt(dx * dx + dy * dy)
-                    if (distance < adjustedMinDistance) {
-                        tooClose = true
-                        break
-                    }
-                }
-
-                if (!tooClose) {
-                    positions.add(Pair(x, y))
-                    validPosition = true
-                }
-            }
-
-            // 如果找不到合适位置，使用备用网格位置
-            if (!validPosition) {
-                val col = i % 4
-                val row = i / 4
-                val gridX = padding + col * (1f - padding * 2) / 3
-                val gridY = padding + row * (1f - padding * 2) / (count / 4 + 1)
-                positions.add(Pair(gridX, gridY))
-            }
+            positions.add(Pair(x, y))
         }
 
         return positions

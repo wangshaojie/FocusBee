@@ -80,12 +80,29 @@ class MemoryGameModule : AbstractGameModule() {
      * 开始游戏（跳过倒计时，直接开始）
      */
     override fun start(level: Int) {
-        setLevel(level)
+        // 根据关卡号设置难度
+        setDifficultyFromLevel(level)
+
+        // level 是当前难度内的关卡号 (1-50)
+        levelIndex = (level - 1).coerceIn(0, currentDifficulty.levelCount - 1)
         currentScore = 0
         mistakeCount = 0
 
         // 直接进入游戏状态，不显示倒计时
         startGame()
+    }
+
+    /**
+     * 根据关卡号设置难度
+     * 1-50 -> EASY, 51-100 -> MEDIUM, 101-150 -> HARD, 151-200 -> EXPERT
+     */
+    private fun setDifficultyFromLevel(level: Int) {
+        currentDifficulty = when {
+            level <= 50 -> Difficulty.EASY
+            level <= 100 -> Difficulty.MEDIUM
+            level <= 150 -> Difficulty.HARD
+            else -> Difficulty.EXPERT
+        }
     }
 
     // 公开方法供 UI 调用

@@ -273,6 +273,55 @@ fun GameScreen(
                 onBack = onBack
             )
         }
+        "quick_quiz" -> {
+            // 抢答题游戏
+            val scoreManager = remember { ScoreManager.getInstance(context) }
+            val module = remember { com.animalgame.games.quickquiz.QuizGameModule() }
+
+            // 收集结果并保存
+            LaunchedEffect(Unit) {
+                module.result.collectLatest { result ->
+                    result?.let {
+                        val modelResult = GameResult(
+                            gameId = it.gameId,
+                            level = it.level,
+                            score = it.score,
+                            stars = it.stars,
+                            isCompleted = it.isSuccess,
+                            timeMillis = it.timeMillis,
+                            mistakes = it.mistakes
+                        )
+                        scoreManager.reportResult(modelResult)
+                    }
+                }
+            }
+
+            // 使用 Quiz UI
+            com.animalgame.games.quickquiz.QuizGameScreen(
+                module = module,
+                onBack = onBack
+            )
+        }
+        "word_chain" -> {
+            // 谁说得快（词语接龙）游戏
+            val module = remember { com.animalgame.games.wordchain.WordChainGameModule() }
+
+            // 使用 Word Chain UI
+            com.animalgame.games.wordchain.WordChainGameScreen(
+                module = module,
+                onBack = onBack
+            )
+        }
+        "mini_speech" -> {
+            // 30秒小演说游戏
+            val module = remember { com.animalgame.games.minispeech.MiniSpeechGameModule() }
+
+            // 使用 Mini Speech UI
+            com.animalgame.games.minispeech.MiniSpeechGameScreen(
+                module = module,
+                onBack = onBack
+            )
+        }
         else -> {
             // 未知游戏
             Box(

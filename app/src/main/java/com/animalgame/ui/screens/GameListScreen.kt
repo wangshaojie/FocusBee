@@ -189,6 +189,7 @@ fun GameListScreen(
                             cardHeight = cardHeight,
                             emojiSize = emojiSize,
                             gameNameSize = gameNameSize,
+                            badge = if (game.gameName == "抢答题" || game.gameName == "谁说得快" || game.gameName == "30秒小演说") "亲子" else null,
                             onClick = { onGameClick(game.gameId) }
                         )
                     }
@@ -392,6 +393,7 @@ private fun KidFriendlyGameCard(
     cardHeight: Dp,
     emojiSize: Dp,
     gameNameSize: androidx.compose.ui.unit.TextUnit,
+    badge: String? = null,
     onClick: () -> Unit
 ) {
     // 点击动画
@@ -439,6 +441,25 @@ private fun KidFriendlyGameCard(
                     )
                 )
         ) {
+            // 标签（如"线下"）
+            if (badge != null) {
+                Surface(
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .offset(x = (-8).dp, y = 4.dp),
+                    color = Color(0xFFFF6B6B),
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Text(
+                        text = badge,
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White,
+                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                    )
+                }
+            }
+
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -511,6 +532,9 @@ private fun getGameThemeColors(gameName: String): Pair<List<Color>, Color> {
         "镜像绘图" -> listOf(Color(0xFF81C784), Color(0xFF66BB6A)) to Color(0xFF2E7D32)
         "灯塔路径" -> listOf(Color(0xFFFFE082), Color(0xFFFFD54F)) to Color(0xFFF9A825)
         "数字连连看" -> listOf(Color(0xFF4DD0E1), Color(0xFF26C6DA)) to Color(0xFF00838F)
+        "抢答题" -> listOf(Color(0xFFFF8A65), Color(0xFFFF7043)) to Color(0xFFBF360C)
+        "谁说得快" -> listOf(Color(0xFFBA68C8), Color(0xFF9C27B0)) to Color(0xFF6A1B9A)
+        "30秒小演说" -> listOf(Color(0xFFFF8A65), Color(0xFFFF7043)) to Color(0xFFBF360C)
         else -> listOf(Color(0xFF90A4AE), Color(0xFF78909C)) to Color(0xFF455A64)
     }
 }
@@ -529,6 +553,9 @@ private fun getGameEmoji(gameName: String): String {
         "镜像绘图" -> "🖌️"
         "灯塔路径" -> "🏠"
         "数字连连看" -> "🔢"
+        "抢答题" -> "📝"
+        "谁说得快" -> "💬"
+        "30秒小演说" -> "🎤"
         else -> "🎮"
     }
 }
